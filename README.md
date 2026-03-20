@@ -1,1 +1,1 @@
-# maqc-frontend
+# MQCP-frontend
