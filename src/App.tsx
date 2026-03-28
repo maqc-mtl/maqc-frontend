@@ -74,7 +74,7 @@ const Header: React.FC = () => {
                         >
                             <Globe size={18} className={`text-slate-400 group-hover:text-blue-600 transition-colors ${isLangOpen ? 'text-blue-600' : ''}`} />
                             <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
-                                {languages.find(l => l.code === currentLang)?.short || 'EN'}
+                                {languages.find(l => l.code === currentLang)?.short || 'FR'}
                             </span>
                         </button>
 
