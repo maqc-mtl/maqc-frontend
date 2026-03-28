@@ -1,8 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { CreditCard, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+
+const GST_RATE = 0.05;
+const QST_RATE = 0.09975;
+
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-CA', {
+        style: 'currency',
+        currency: 'CAD',
+    }).format(amount);
+};
+
+const parsePrice = (priceStr: string): number => {
+    return parseFloat(priceStr.replace(/[^0-9.]/g, ''));
+};
 
 const Payment: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -21,14 +35,31 @@ const Payment: React.FC = () => {
         cvc: ''
     });
 
-    const getPlanPrice = (planName: string) => {
+    const getPlanPrice = (planName: string): string => {
         switch (planName.toLowerCase()) {
-            case 'basic': return '$0.00';
-            case 'premium': return '$49.99';
-            case 'pro': return '$99.99';
-            default: return '$29.99';
+            case 'free': return '$0';
+            case 'basic': return '$99';
+            case 'plus': return '$199';
+            case 'pro': return '$399';
+            default: return '$0';
         }
     };
+
+    const priceDetails = useMemo(() => {
+        const basePriceStr = getPlanPrice(plan);
+        const basePrice = parsePrice(basePriceStr);
+
+        const gst = basePrice * GST_RATE;
+        const qst = basePrice * QST_RATE;
+        const total = basePrice + gst + qst;
+
+        return {
+            base: basePrice,
+            gst,
+            qst,
+            total
+        };
+    }, [plan]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -66,7 +97,7 @@ const Payment: React.FC = () => {
             if (!user) {
                 throw new Error('Please log in to complete the purchase');
             }
-
+            //phrase 3
             // Call backend payment endpoint
             await api.post('/payments/process', {
                 planType: plan,
@@ -128,21 +159,24 @@ const Payment: React.FC = () => {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm text-slate-400 uppercase tracking-wider font-bold mb-1">Price</p>
-                                    <p className="text-xl font-bold">{getPlanPrice(plan)}</p>
+                                    <p className="text-xl font-bold">{formatCurrency(priceDetails.base)}</p>
                                 </div>
                             </div>
 
-                            <div className="flex justify-between items-center text-sm text-slate-300 mb-2">
-                                <span>Subtotal</span>
-                                <span>{getPlanPrice(plan)}</span>
+                            <div className="space-y-2 text-sm text-slate-300 mb-4 pb-4 border-b border-white/10">
+                                <div className="flex justify-between items-center">
+                                    <span>GST (5%)</span>
+                                    <span>{formatCurrency(priceDetails.gst)}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span>QST (9.975%)</span>
+                                    <span>{formatCurrency(priceDetails.qst)}</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center text-sm text-slate-300 mb-4 pb-4 border-b border-white/10">
-                                <span>Tax (0%)</span>
-                                <span>$0.00</span>
-                            </div>
+
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold">Total</span>
-                                <span className="text-3xl font-black text-white">{getPlanPrice(plan)}</span>
+                                <span className="text-3xl font-black text-white">{formatCurrency(priceDetails.total)}</span>
                             </div>
                         </div>
                     </div>
@@ -255,7 +289,7 @@ const Payment: React.FC = () => {
                                         Processing...
                                     </>
                                 ) : (
-                                    `Pay ${getPlanPrice(plan)}`
+                                    `Pay ${formatCurrency(priceDetails.total)}`
                                 )}
                             </button>
                         </div>

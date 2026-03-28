@@ -9,4 +9,11 @@ const api = axios.create({
     },
 });
 
+// Property-related API calls
+export const propertyApi = {
+    // Increment view count for a property
+    incrementViewCount: (propertyId: number) =>
+        api.post(`/properties/${propertyId}/view`),
+};
+
 export default api;

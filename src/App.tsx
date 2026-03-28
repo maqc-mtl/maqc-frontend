@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Globe, Mail, Phone, MapPin, LogIn, UserPlus, PlusCircle, FileText, Crown, LogOut, Info, AlertTriangle } from 'lucide-react';
+import { Globe, Mail, Phone, MapPin, LogIn, UserPlus, PlusCircle, FileText, Crown, LogOut, Info, AlertTriangle, Heart } from 'lucide-react';
+import logo from '../logo.png';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './context/AuthContext';
 import Home from './pages/Home';
@@ -14,6 +15,10 @@ import Membership from './pages/Membership';
 import Payment from './pages/Payment';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import Favorites from './pages/Favorites';
+import PurchaseOffer from './pages/PurchaseOffer';
+import AdminDashboard from './pages/AdminDashboard';
+
 // import Payment from './pages/Payment';
 
 const Header: React.FC = () => {
@@ -28,6 +33,7 @@ const Header: React.FC = () => {
 
     const handleLogout = () => {
         logout();
+        setIsUserMenuOpen(false);
         navigate('/');
     };
 
@@ -54,7 +60,7 @@ const Header: React.FC = () => {
             <div className="max-w-[1600px] mx-auto px-10 h-24 flex justify-between items-center">
                 <Link to="/" className="text-3xl font-black tracking-tighter text-slate-900 flex items-center gap-3 group">
                     <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 group-hover:bg-blue-600 transition-all duration-500 shadow-xl shadow-slate-900/10">
-                        <Zap size={24} className="text-white fill-current" />
+                        <img src={logo} alt="MAQC" className="w-8 h-8 object-contain" />
                     </div>
                     <span className="tracking-[-0.05em] uppercase">MAQC</span>
                 </Link>
@@ -111,7 +117,8 @@ const Header: React.FC = () => {
                                     if (user?.planType === 'FREE') {
                                         navigate('/membership');
                                     } else {
-                                        navigate('/create-property');
+                                        //phrase3
+                                        // navigate('/create-property');
                                     }
                                 }}
                                 className="flex items-center gap-2 px-4 py-2 bg-[#1a56db] text-white rounded-lg text-sm font-medium transition-colors hover:bg-blue-700"
@@ -158,6 +165,16 @@ const Header: React.FC = () => {
                                                         <User size={18} className="text-slate-400" />
                                                         {t('nav.my_account')}
                                                     </Link> */}
+
+                                                    {/* phrase3 <Link to="/favorites" className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                        <Link to="/favorites" className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"></Link>
+                                                        <Heart size={18} className="text-slate-400" />
+                                                        {t('nav.my_favorites', 'My Favorites')}
+                                                    </Link> */}
+                                                    <Link to="/favorites1111" className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                        <Heart size={18} className="text-slate-400" />
+                                                        {t('nav.my_favorites', 'My Favorites')}
+                                                    </Link>
                                                     <Link to="/my-ads" className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                                         <FileText size={18} className="text-slate-400" />
                                                         {t('nav.my_ads')}
@@ -213,9 +230,12 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/properties/:id" element={<PropertyDetail />} />
+                        <Route path="/properties/:id/purchase-offer" element={<PurchaseOffer />} />
                         <Route path="/membership" element={<Membership />} />
                         <Route path="/payment" element={<Payment />} />
                         <Route path="/create-property" element={<CreateProperty />} />
+                        <Route path="/favorites" element={<Favorites />} />
+                        <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/terms" element={<TermsPage />} />
                         <Route path="/privacy" element={<PrivacyPage />} />
                         <Route path="/terms" element={<TermsPage />} />

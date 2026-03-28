@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bed, Bath, Camera, Heart, Maximize2, MapPin } from 'lucide-react';
+import { Bed, Bath, Camera, Eye, Heart, Maximize2, MapPin, Percent } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface PropertyCardProps {
@@ -17,6 +17,12 @@ interface PropertyCardProps {
         type: string;
         listingType: string;
         imageUrls?: string[];
+        publishDate?: string;
+        favoriteCount?: number;
+        viewCount?: number;
+        annualRent?: number;
+        annualExpenses?: number;
+        capRate?: number;
     };
 }
 
@@ -119,7 +125,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                     <span className="text-xl font-black text-slate-900 tracking-tight">
                         {formattedPrice}
                     </span>
-                    <Heart size={16} className="text-slate-200 ml-auto cursor-pointer hover:text-red-500 transition-colors" />
+                    <div className="flex items-center gap-3 ml-auto text-slate-500">
+                        <div className="flex items-center gap-1">
+                            <Eye size={16} className="text-slate-300" />
+                            <span className="text-sm font-bold">{property.viewCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Heart size={16} className="text-slate-300" />
+                            <span className="text-sm font-bold">{property.favoriteCount || 0}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-tight">
@@ -135,6 +150,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                         {getAreaName(property.area)}
                     </div>
                 )}
+
+                {/* Publish Date & Cap Rate */}
+                <div className="flex items-center gap-4 mb-4">
+                    {property.publishDate && (
+                        <div className="text-xs text-slate-400 font-medium">
+                            {t('properties.published')}: {new Date(property.publishDate).toLocaleDateString()}
+                        </div>
+                    )}
+                    {property.listingType === 'FOR_SALE' && property.capRate && (
+                        <div className="text-xs font-bold text-green-600">
+                            {t('detail.cap_rate')}: {property.capRate.toFixed(2)}%
+                        </div>
+                    )}
+                </div>
 
                 {/* Specs */}
                 <div className="flex items-center gap-4 mt-auto pt-4 border-t border-slate-50 text-slate-600 font-bold text-sm">

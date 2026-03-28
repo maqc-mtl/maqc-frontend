@@ -24,7 +24,7 @@ const Home: React.FC = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalProperty, setTotalProperty] = useState(0);
-    const [sortOrder, setSortOrder] = useState<string>('');
+    const [sortCriteria, setSortCriteria] = useState<Array<{ field: string, direction: 'asc' | 'desc' }>>([]);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const observer = useRef<IntersectionObserver | null>(null);
 
@@ -46,6 +46,22 @@ const Home: React.FC = () => {
         if (node) observer.current.observe(node);
     }, [loading, loadingMore, page, totalPages]);
 
+    const getSortParams = (): string[] => {
+        return sortCriteria.map(criteria => `${criteria.field},${criteria.direction}`);
+    };
+
+    const addOrUpdateSort = (field: string, direction: 'asc' | 'desc') => {
+        setSortCriteria(prev => {
+            // Remove existing criterion for this field if present
+            const filtered = prev.filter(c => c.field !== field);
+            // Add the new/updated criterion at the ending (primary sort)
+            return [...filtered, { field, direction }];
+        });
+        setIsSortOpen(true);
+    };
+
+    // Removed getFieldLabel - using i18n directly
+
     const fetchProperties = useCallback(async (isNextPage = false) => {
         if (!isNextPage) setLoading(true);
         else setLoadingMore(true);
@@ -58,17 +74,35 @@ const Home: React.FC = () => {
                 finalMaxPrice = finalMinPrice;
             }
 
+            const params: any = {
+                listingType: transactionType,
+                // keyword: searchQuery || undefined,
+                area: selectedArea || undefined,
+                type: selectedType || undefined,
+                minPrice: finalMinPrice || undefined,
+                maxPrice: finalMaxPrice || undefined,
+                page: isNextPage ? page : 0,
+                size: 12,
+            };
+            const sortParams = getSortParams();
+
             const response = await api.get('/properties/public/search', {
-                params: {
-                    listingType: transactionType,
-                    // keyword: searchQuery || undefined,
-                    area: selectedArea || undefined,
-                    type: selectedType || undefined,
-                    minPrice: finalMinPrice || undefined,
-                    maxPrice: finalMaxPrice || undefined,
-                    page: isNextPage ? page : 0,
-                    size: 12,
-                    sort: sortOrder ? (sortOrder === 'price_asc' ? 'price,asc' : 'price,desc') : undefined
+                params: params,
+                paramsSerializer: {
+                    serialize: (p: any) => {
+                        const searchParams = new URLSearchParams();
+                        Object.keys(p).forEach(key => {
+                            const value = p[key];
+                            if (value !== undefined && value !== null) {
+                                searchParams.append(key, value);
+                            }
+                        });
+                        // Add sort parameters without brackets
+                        sortParams.forEach(sort => {
+                            searchParams.append('sort', sort);
+                        });
+                        return searchParams.toString();
+                    }
                 }
             });
 
@@ -92,12 +126,12 @@ const Home: React.FC = () => {
             setLoadingMore(false);
         }
         //}, [transactionType, searchQuery, debouncedMinPrice, debouncedMaxPrice, selectedArea, selectedType, page, sortOrder]);
-    }, [transactionType, debouncedMinPrice, debouncedMaxPrice, selectedArea, selectedType, page, sortOrder]);
+    }, [transactionType, debouncedMinPrice, debouncedMaxPrice, selectedArea, selectedType, page, sortCriteria]);
 
     useEffect(() => {
         fetchProperties();
         //}, [transactionType, debouncedMinPrice, debouncedMaxPrice, selectedArea, selectedType, searchQuery, sortOrder]);
-    }, [transactionType, debouncedMinPrice, debouncedMaxPrice, selectedArea, selectedType, sortOrder]);
+    }, [transactionType, debouncedMinPrice, debouncedMaxPrice, selectedArea, selectedType, sortCriteria]);
 
     useEffect(() => {
         console.log('useEffect page', page);
@@ -131,7 +165,7 @@ const Home: React.FC = () => {
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="text-center mb-12"
                     >
-                        <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter drop-shadow-2xl">
+                        <h1 className="whitespace-pre-line leading-tight text-4xl md:text-4xl font-black text-white mb-6 tracking-tighter drop-shadow-2xl">
                             {t('home.hero_title')}
                         </h1>
                         <p className="text-lg text-white/90 font-medium tracking-wide">
@@ -318,7 +352,27 @@ const Home: React.FC = () => {
                                 onClick={() => setIsSortOpen(!isSortOpen)}
                                 className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group"
                             >
-                                {sortOrder === 'price_desc' ? t('common.price_high_low') : sortOrder === 'price_asc' ? t('common.price_low_high') : t('common.sort_by')}
+                                {sortCriteria.length === 0 ? t('common.sort_by') :
+                                    sortCriteria.map(c => {
+                                        let fieldLabel: string;
+                                        let directionLabel: string;
+
+                                        switch (c.field) {
+                                            case 'price':
+                                                fieldLabel = t('common.sort_price_group');
+                                                directionLabel = c.direction === 'desc' ? t('common.price_high_low') : t('common.price_low_high');
+                                                break;
+                                            case 'capRate':
+                                                fieldLabel = t('common.sort_cap_rate_group');
+                                                directionLabel = c.direction === 'desc' ? t('common.sort_cap_rate_high_low') : t('common.sort_cap_rate_low_high');
+                                                break;
+                                            case 'publishDate':
+                                            default:
+                                                fieldLabel = t('common.sort_date_group');
+                                                directionLabel = c.direction === 'desc' ? t('common.sort_date_desc') : t('common.sort_date_asc');
+                                        }
+                                        return `${fieldLabel} (${directionLabel})`;
+                                    }).join(', ')}
                                 <ChevronDown size={14} className={`transition-transform ${isSortOpen ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
                             </button>
 
@@ -330,26 +384,99 @@ const Home: React.FC = () => {
                                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-slate-100 py-2 z-20 overflow-hidden"
+                                            className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-slate-100 py-4 z-20 overflow-hidden"
                                         >
-                                            <button
-                                                onClick={() => { setSortOrder(''); setIsSortOpen(false); }}
-                                                className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors ${sortOrder === '' ? 'font-bold text-blue-600' : 'text-slate-700'}`}
-                                            >
-                                                {t('common.default_sort')}
-                                            </button>
-                                            <button
-                                                onClick={() => { setSortOrder('price_desc'); setIsSortOpen(false); }}
-                                                className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors ${sortOrder === 'price_desc' ? 'font-bold text-blue-600' : 'text-slate-700'}`}
-                                            >
-                                                {t('common.price_high_low')}
-                                            </button>
-                                            <button
-                                                onClick={() => { setSortOrder('price_asc'); setIsSortOpen(false); }}
-                                                className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition-colors ${sortOrder === 'price_asc' ? 'font-bold text-blue-600' : 'text-slate-700'}`}
-                                            >
-                                                {t('common.price_low_high')}
-                                            </button>
+                                            {/* Current Sort Criteria Display */}
+                                            {sortCriteria.length > 0 && (
+                                                <div className="px-4 pb-3 mb-2 border-b border-slate-100">
+                                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                        {t('common.active_sorting')}
+                                                    </div>
+                                                    {sortCriteria.map((criteria, index) => {
+                                                        let fieldKey: string;
+                                                        switch (criteria.field) {
+                                                            case 'price':
+                                                                fieldKey = 'sort_price_group';
+                                                                break;
+                                                            case 'capRate':
+                                                                fieldKey = 'sort_cap_rate_group';
+                                                                break;
+                                                            default:
+                                                                fieldKey = 'sort_date_group';
+                                                        }
+                                                        const directionKey = criteria.direction === 'desc' ? 'high_to_low' : 'low_to_high';
+                                                        return (
+                                                            <div key={index} className="flex items-center justify-between py-1">
+                                                                <span className="text-sm text-slate-700">
+                                                                    {t(`common.${fieldKey}`)} - {t(`common.${directionKey}`)}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const newCriteria = [...sortCriteria];
+                                                                        newCriteria.splice(index, 1);
+                                                                        setSortCriteria(newCriteria);
+                                                                    }}
+                                                                    className="text-red-500 hover:text-red-700 text-sm font-bold"
+                                                                >
+                                                                    {t('common.remove')}
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+
+                                            {/* sorting */}
+                                            <div className="px-4 pt-3">
+                                                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                    {t('common.sort_price_group')}
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <button
+                                                        onClick={() => addOrUpdateSort('price', 'desc')}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'price' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                    >
+                                                        {t('common.price_high_low')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => addOrUpdateSort('price', 'asc')}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'price' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                    >
+                                                        {t('common.price_low_high')}
+                                                    </button>
+                                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                        {t('common.sort_date_group')}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => addOrUpdateSort('publishDate', 'desc')}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'publishDate' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                    >
+                                                        {t('common.sort_date_desc')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => addOrUpdateSort('publishDate', 'asc')}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'publishDate' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                    >
+                                                        {t('common.sort_date_asc')}
+                                                    </button>
+                                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-4">
+                                                        {t('common.sort_cap_rate_group')}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => addOrUpdateSort('capRate', 'desc')}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'capRate' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                    >
+                                                        {t('common.sort_cap_rate_high_low')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => addOrUpdateSort('capRate', 'asc')}
+                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'capRate' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                    >
+                                                        {t('common.sort_cap_rate_low_high')}
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </motion.div>
                                     </>
                                 )}

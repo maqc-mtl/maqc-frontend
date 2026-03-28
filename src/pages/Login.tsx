@@ -23,7 +23,12 @@ const Login: React.FC = () => {
                 response.data.lastName,
                 response.data.planType
             );
-            navigate('/');
+            if (response.data.role === 'ADMIN') {
+                navigate('/admin');
+            } else {
+                navigate('/');
+            }
+
         } catch (error) {
             console.error('Login failed', error);
         }
