@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Phone, Mail, MapPin, Star, ShieldCheck, UserCheck } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 
 type Tab = 'properties' | 'notaries' | 'inspectors' | 'agents';
