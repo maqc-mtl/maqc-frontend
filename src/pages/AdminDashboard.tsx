@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Globe, Phone, Mail, MapPin, Star, ShieldCheck, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Phone, Mail, MapPin, Star, ShieldCheck, UserCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 
@@ -19,7 +19,7 @@ interface Professional {
 }
 
 const AdminDashboard: React.FC = () => {
-    const { t } = useTranslation();
+    // const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState<Tab>('properties');
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

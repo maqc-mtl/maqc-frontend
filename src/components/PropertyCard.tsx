@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bed, Bath, Camera, Eye, Heart, Maximize2, MapPin, Percent } from 'lucide-react';
+import { Bed, Bath, Camera, Eye, Heart, Maximize2, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface PropertyCardProps {
