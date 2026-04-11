@@ -2,7 +2,8 @@ import axios from 'axios';
 import type { PropertyScoreDTO } from '../types/PropertyScoreDTO';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api/v1',
+    // phrase3 baseURL: 'http://localhost:8080/api/v1',
+    baseURL: 'https://maqc-backend.onrender.com/api/v1',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
