@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Upload, Info, MapPin, Home as HomeIcon, Image as ImageIcon, Phone, CheckCircle, X, AlertCircle, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 
 const CreateProperty: React.FC = () => {
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const { user } = useAuth();
     const [formData, setFormData] = useState({
@@ -305,7 +307,7 @@ const CreateProperty: React.FC = () => {
 
                     <div className="space-y-3">
                         <button
-                            onClick={() => window.location.href = '/membership'}
+                            onClick={() => navigate('/membership')}
                             className="w-full px-6 py-3 bg-[#1a56db] text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                         >
                             <Crown size={20} />

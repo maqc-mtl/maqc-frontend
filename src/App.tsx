@@ -255,12 +255,12 @@ const Header: React.FC = () => {
                                                                     <Heart size={18} className="text-slate-400" />
                                                                     {t('nav.my_favorites', 'My Favorites')}
                                                                 </Link>
-                                                                <Link to="/my-ads" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                                <Link to="/my-ads1" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                                                     {/* phrase3 <Link to="/my-ads" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"> */}
                                                                     <FileText size={18} className="text-slate-400" />
                                                                     {t('nav.my_ads')}
                                                                 </Link>
-                                                                <Link to="/membership" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                                                <Link to="/membership1" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                                                     {/* phrase3 <Link to="/membership" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"> */}
                                                                     <Crown size={18} className="text-slate-400" />
                                                                     {t('nav.subscriptions')}
