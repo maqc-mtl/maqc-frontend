@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Heart } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import api from '../services/api';
 import PropertyCard from '../components/PropertyCard';
 import { useAuth } from '../context/AuthContext';
 
-const Favorites: React.FC = () => {
+const MyAds: React.FC = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
-    const [favoriteProperties, setFavoriteProperties] = useState<any[]>([]);
+    const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [totalFavorites, setTotalFavorites] = useState(0);
+    const [totalProperties, setTotalProperties] = useState(0);
 
-    const fetchFavorites = useCallback(async (isNextPage = false) => {
+    const fetchProperties = useCallback(async (isNextPage = false) => {
         if (!user || (!user as any).id) return;
         if (!isNextPage) setLoading(true);
         try {
-            const response = await api.get(`/properties/${user.id}/favorites`, {
+            const response = await api.get(`/properties/user/${(user as any).id}`, {
                 params: {
                     page: isNextPage ? page : 0,
                     size: 12,
@@ -27,28 +27,28 @@ const Favorites: React.FC = () => {
 
             const newProperties = response.data.content;
             setTotalPages(response.data.totalPages);
-            setTotalFavorites(response.data.totalElements);
+            setTotalProperties(response.data.totalElements);
             if (isNextPage) {
-                setFavoriteProperties(prev => [...prev, ...newProperties]);
+                setProperties(prev => [...prev, ...newProperties]);
             } else {
-                setFavoriteProperties(newProperties);
+                setProperties(newProperties);
                 setPage(0);
             }
         } catch (error) {
-            console.error('Failed to fetch favorites', error);
-            if (!isNextPage) setFavoriteProperties([]);
+            console.error('Failed to fetch user properties', error);
+            if (!isNextPage) setProperties([]);
         } finally {
             setLoading(false);
         }
-    }, [page]);
+    }, [page, user]);
 
     useEffect(() => {
-        fetchFavorites();
-    }, [fetchFavorites]);
+        fetchProperties();
+    }, [fetchProperties]);
 
     useEffect(() => {
         if (page > 0) {
-            fetchFavorites(true);
+            fetchProperties(true);
         }
     }, [page]);
 
@@ -58,13 +58,13 @@ const Favorites: React.FC = () => {
             <div className="bg-white border-b border-slate-200">
                 <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <Heart className="text-red-500" size={32} fill="#ef4444" />
+                        <FileText className="text-blue-500" size={32} />
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-                            {t('favorites.title', 'My Favorites')}
+                            {t('my_ads.title', 'My Ads')}
                         </h1>
                     </div>
                     <p className="text-slate-500">
-                        {totalFavorites} {t('favorites.count', 'properties')}
+                        {totalProperties} {t('my_ads.count', 'properties')}
                     </p>
                 </div>
             </div>
@@ -76,28 +76,28 @@ const Favorites: React.FC = () => {
                         <div className="text-center">
                             <div className="relative w-16 h-16 mx-auto mb-6">
                                 <div className="absolute inset-0 rounded-full border-4 border-blue-500/20"></div>
-                                <div className="absolute inset-0 rounded-full border-4 border-t-blue-600 animate-spin"></div>
+                                <div className="absolute inset-0 rounded-full border-t-blue-600 animate-spin"></div>
                             </div>
                             <p className="text-slate-500 font-bold text-xs uppercase tracking-widest">
-                                {t('common.loading')}
+                                {t('common.loading', 'Loading...')}
                             </p>
                         </div>
                     </div>
-                ) : favoriteProperties.length === 0 ? (
+                ) : properties.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <Heart className="text-slate-300 mb-4" size={64} />
+                        <FileText className="text-slate-300 mb-4" size={64} />
                         <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                            {t('favorites.empty_title', 'No Favorites Yet')}
+                            {t('my_ads.empty_title', 'No Ads Yet')}
                         </h2>
                         <p className="text-slate-500 max-w-md">
-                            {t('favorites.empty_message', 'Start exploring properties and click the heart icon to add them to your favorites.')}
+                            {t('my_ads.empty_message', 'You have not published any properties yet.')}
                         </p>
                     </div>
                 ) : (
                     <>
                         {/* Properties Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {favoriteProperties.map((property) => (
+                            {properties.map((property) => (
                                 <div key={property.id}>
                                     <PropertyCard property={property} />
                                 </div>
@@ -122,4 +122,4 @@ const Favorites: React.FC = () => {
     );
 };
 
-export default Favorites;
+export default MyAds;

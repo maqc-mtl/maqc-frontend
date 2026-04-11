@@ -6,11 +6,12 @@ import {
     Globe, X, ChevronLeft, ChevronRight, Home as HomeIcon,
     Ruler, FileText, Map, Send,
     Heart, Share2, Calendar, Home,
-    Lock, Download, Calculator, CalendarClock, ShieldCheck
+    Lock, Download, Calculator, CalendarClock, ShieldCheck, User
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import api, { propertyApi } from '../services/api';
+import { ToolsModals } from '../components/ToolsModals';
 
 interface Property {
     id: number;
@@ -29,7 +30,10 @@ interface Property {
     hasTerrace?: boolean;
     hasPool?: boolean;
     hasYard?: boolean;
-    annualRent?: number;
+    indoorParking?: number;
+    outdoorParking?: number;
+    hasStove?: boolean;
+    annualRevenue?: number;
     annualExpenses?: number;
     capRate?: number;
     type: string;
@@ -70,6 +74,7 @@ const PropertyDetail: React.FC = () => {
     const [showMortgageModal, setShowMortgageModal] = useState(false);
     const [showNotaryModal, setShowNotaryModal] = useState(false);
     const [showInspectorModal, setShowInspectorModal] = useState(false);
+    const [activeGlobalModal, setActiveGlobalModal] = useState<'buyerAgent' | 'sellerAgent' | null>(null);
 
     // Mortgage calculator state
     const [mortgagePrice, setMortgagePrice] = useState(0);
@@ -156,7 +161,7 @@ const PropertyDetail: React.FC = () => {
             }
         };
         fetchProperty();
-    }, [id]);
+    }, [id, user?.id]);
 
     // Increment view count when property is loaded
     useEffect(() => {
@@ -188,7 +193,7 @@ const PropertyDetail: React.FC = () => {
         if (!property || !isAuthenticated) return;
 
         try {
-            const response = await api.post(`/properties/${property.id}/favorite`);
+            const response = await api.post(`/properties/${user?.id}/${property.id}/favorite`);
             setProperty(response.data);
             setIsFavorite(response.data.isFavorite);
         } catch (error) {
@@ -204,15 +209,14 @@ const PropertyDetail: React.FC = () => {
         setSubmitError(null);
 
         try {
-            //phrase 3
-            // await api.post(`/properties/${property.id}/contact`, {
-            //     subject: contactForm.subject,
-            //     firstName: contactForm.firstName,
-            //     lastName: contactForm.lastName,
-            //     email: contactForm.email,
-            //     phone: contactForm.phone,
-            //     message: contactForm.message
-            // });
+            await api.post(`/properties/${property.id}/contact`, {
+                subject: contactForm.subject,
+                firstName: contactForm.firstName,
+                lastName: contactForm.lastName,
+                email: contactForm.email,
+                phone: contactForm.phone,
+                message: contactForm.message
+            });
 
             alert(t('detail.message_sent'));
             setShowContactModal(false);
@@ -330,9 +334,9 @@ const PropertyDetail: React.FC = () => {
                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${isFavorite ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200 hover:bg-red-50 hover:border-red-200'}`}
                             >
                                 <Heart size={16} fill={isFavorite ? '#ef4444' : 'none'} className={isFavorite ? 'text-red-500' : 'text-slate-500'} />
-                                <span className={`text-sm font-bold ${isFavorite ? 'text-red-500' : 'text-slate-600'}`}>
-                                    {property.favoriteCount || 0}
-                                </span>
+                                {/* <span className={`text-sm font-bold ${isFavorite ? 'text-red-500' : 'text-slate-600'}`}> */}
+                                {/* {property.favoriteCount || 0} */}
+                                {/* </span> */}
                             </button>
                             {/* <button
                                 onClick={() => setShowContactModal(true)}
@@ -520,8 +524,16 @@ const PropertyDetail: React.FC = () => {
                                                 <div className="text-sm font-bold text-slate-700">{property.hasYard ? '✓' : '—'}</div>
                                             </div>
                                             <div>
-                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.parking')}</div>
-                                                <div className="text-sm font-bold text-slate-700">—</div>
+                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.indoor_parking')}</div>
+                                                <div className="text-sm font-bold text-slate-700">{property.indoorParking || '0'}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.outdoor_parking')}</div>
+                                                <div className="text-sm font-bold text-slate-700">{property.outdoorParking || '0'}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.stove')}</div>
+                                                <div className="text-sm font-bold text-slate-700">{property.hasStove ? '✓' : '—'}</div>
                                             </div>
                                             <div>
                                                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.fireplace')}</div>
@@ -531,9 +543,9 @@ const PropertyDetail: React.FC = () => {
                                             {property.listingType === 'FOR_SALE' && (
                                                 <>
                                                     <div>
-                                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.annual_rent')}</div>
+                                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{t('detail.annual_revenue')}</div>
                                                         <div className="text-sm font-bold text-slate-700">
-                                                            {property.annualRent ? new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(property.annualRent).replace('$', '').trim() + ' $' : '—'}
+                                                            {property.annualRevenue ? new Intl.NumberFormat('fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(property.annualRevenue).replace('$', '').trim() + ' $' : '—'}
                                                         </div>
                                                     </div>
                                                     <div>
@@ -584,12 +596,10 @@ const PropertyDetail: React.FC = () => {
                                 {/* Tools Section */}
                                 <h2 className="text-lg font-black text-slate-900 mb-4 tracking-tight">{t('detail.tools_title')}</h2>
                                 {isAuthenticated && user?.planType !== 'FREE' ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                                         {/* Download Purchase Offer */}
                                         <Link
-                                            //phrase3
-                                            // to={`/properties/${property.id}/purchase-offer`}
-                                            to={`/properties/${property.id}/purchase-offer1`}
+                                            to={`/properties/${property.id}/purchase-offer`}
                                             className="group bg-white border-2 border-slate-100 rounded-2xl p-6 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all cursor-pointer"
                                         >
                                             <div className="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">
@@ -610,8 +620,7 @@ const PropertyDetail: React.FC = () => {
                                                 setAmortization('');
                                                 setPaymentFrequency('monthly');
                                                 setPaymentResult(null);
-                                                //phrase3
-                                                // setShowMortgageModal(true);
+                                                setShowMortgageModal(true);
                                             }}
                                             className="group bg-white border-2 border-slate-100 rounded-2xl p-6 text-left hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all cursor-pointer"
                                         >
@@ -628,8 +637,7 @@ const PropertyDetail: React.FC = () => {
                                                 setNotaryForm({ date: '', time: '', name: '', phone: '', email: '', notes: '' });
                                                 setNotarySuccess(false);
                                                 setSelectedNotary(null);
-                                                //phrase3
-                                                // setShowNotaryModal(true);
+                                                setShowNotaryModal(true);
                                             }}
                                             className="group bg-white border-2 border-slate-100 rounded-2xl p-6 text-left hover:border-purple-200 hover:shadow-lg hover:shadow-purple-50 transition-all cursor-pointer"
                                         >
@@ -646,8 +654,7 @@ const PropertyDetail: React.FC = () => {
                                                 setInspectorForm({ date: '', time: '', name: '', phone: '', email: '', notes: '' });
                                                 setInspectorSuccess(false);
                                                 setSelectedInspector(null);
-                                                //phrase3
-                                                // setShowInspectorModal(true);
+                                                setShowInspectorModal(true);
                                             }}
                                             className="group bg-white border-2 border-slate-100 rounded-2xl p-6 text-left hover:border-blue-200 hover:shadow-lg hover:shadow-blue-50 transition-all cursor-pointer"
                                         >
@@ -656,6 +663,18 @@ const PropertyDetail: React.FC = () => {
                                             </div>
                                             <h3 className="font-black text-sm text-slate-900 mb-1">{t('detail.tools_inspector')}</h3>
                                             <p className="text-xs text-slate-400 leading-relaxed">{t('detail.tools_inspector_desc')}</p>
+                                        </button>
+
+                                        {/* Buyer Agent */}
+                                        <button
+                                            onClick={() => setActiveGlobalModal('buyerAgent')}
+                                            className="group bg-white border-2 border-slate-100 rounded-2xl p-6 text-left hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all cursor-pointer"
+                                        >
+                                            <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
+                                                <User size={22} className="text-emerald-600" />
+                                            </div>
+                                            <h3 className="font-black text-sm text-slate-900 mb-1">{t('nav.book_buyer_agent')}</h3>
+                                            <p className="text-xs text-slate-400 leading-relaxed">{t('detail.tools_buyer_agent_desc', 'Connect with a trusted expert.')}</p>
                                         </button>
                                     </div>
                                 ) : (
@@ -1664,7 +1683,12 @@ const PropertyDetail: React.FC = () => {
                     </>
                 )}
             </AnimatePresence>
-        </div>
+
+            <ToolsModals
+                activeModal={activeGlobalModal}
+                onClose={() => setActiveGlobalModal(null)}
+            />
+        </div >
     );
 };
 

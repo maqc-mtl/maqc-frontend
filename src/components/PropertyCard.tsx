@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bed, Bath, Camera, Eye, Heart, Maximize2, MapPin } from 'lucide-react';
+import { Bed, Bath, Camera, Eye, Heart, Maximize2, MapPin, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface PropertyCardProps {
@@ -20,9 +20,10 @@ interface PropertyCardProps {
         publishDate?: string;
         favoriteCount?: number;
         viewCount?: number;
-        annualRent?: number;
+        annualRevenue?: number;
         annualExpenses?: number;
         capRate?: number;
+        recommendationScore?: number;
     };
 }
 
@@ -122,37 +123,43 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             {/* Content Section */}
             <div className="flex flex-col flex-grow px-1">
                 <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-xl font-black text-slate-900 tracking-tight">
+                    <span className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                         {formattedPrice}
                     </span>
-                    <div className="flex items-center gap-3 ml-auto text-slate-500">
+                    <div className="flex items-center gap-2 sm:gap-3 ml-auto text-slate-500">
+                        {property.recommendationScore && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 rounded-lg">
+                                <Star className="w-3 h-3 text-yellow-400" />
+                                <span className="text-xs font-black text-amber-600">{property.recommendationScore.toFixed(1)}</span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-1">
-                            <Eye size={16} className="text-slate-300" />
-                            <span className="text-sm font-bold">{property.viewCount || 0}</span>
+                            <Eye size={14} className="text-slate-300" />
+                            <span className="text-xs sm:text-sm font-bold">{property.viewCount || 0}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <Heart size={16} className="text-slate-300" />
-                            <span className="text-sm font-bold">{property.favoriteCount || 0}</span>
+                            <Heart size={14} className="text-slate-300" />
+                            <span className="text-xs sm:text-sm font-bold">{property.favoriteCount || 0}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="text-sm font-bold text-slate-700 mb-2 uppercase tracking-tight">
+                <div className="text-xs sm:text-sm font-bold text-slate-700 mb-2 uppercase tracking-tight">
                     {t(`home.type_${property.type.toLowerCase()}`)} {t('common.to_sale')}
                 </div>
 
-                <div className="text-[13px] text-slate-500 font-medium leading-snug mb-2">
+                <div className="text-xs sm:text-[13px] text-slate-500 font-medium leading-snug mb-2 line-clamp-2">
                     {property.address}
                 </div>
 
                 {property.area && (
-                    <div className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-4">
+                    <div className="text-[10px] sm:text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 md:mb-4">
                         {getAreaName(property.area)}
                     </div>
                 )}
 
                 {/* Publish Date & Cap Rate */}
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-4 mb-3 md:mb-4 flex-wrap">
                     {property.publishDate && (
                         <div className="text-xs text-slate-400 font-medium">
                             {t('properties.published')}: {new Date(property.publishDate).toLocaleDateString()}
@@ -166,17 +173,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                 </div>
 
                 {/* Specs */}
-                <div className="flex items-center gap-4 mt-auto pt-4 border-t border-slate-50 text-slate-600 font-bold text-sm">
+                <div className="flex items-center gap-4 mt-auto pt-3 md:pt-4 border-t border-slate-50 text-slate-600 font-bold text-xs sm:text-sm">
                     <div className="flex items-center gap-1.5">
-                        <Bed size={16} strokeWidth={2.5} className="text-slate-400" />
+                        <Bed size={14} strokeWidth={2.5} className="text-slate-400" />
                         <span>{property.bedrooms}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <Bath size={16} strokeWidth={2.5} className="text-slate-400" />
+                        <Bath size={14} strokeWidth={2.5} className="text-slate-400" />
                         <span>{property.bathrooms}</span>
                     </div>
                     <div className="flex items-center gap-1.5 opacity-40 ml-auto">
-                        <MapPin size={16} />
+                        <MapPin size={14} />
                     </div>
                 </div>
             </div>

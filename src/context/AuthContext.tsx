@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
+    id: number;
     email: string;
     phoneNumber: string;
     role: string;
@@ -11,7 +12,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, phone: string, role: string, firstName: string, lastName: string, planType: string) => void;
+    login: (id: number, email: string, phone: string, role: string, firstName: string, lastName: string, planType: string) => void;
     logout: () => void;
     updatePlanType: (planType: string) => void;
     isAuthenticated: boolean;
@@ -29,8 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, []);
 
-    const login = (email: string, phoneNumber: string, role: string, firstName: string, lastName: string, planType: string) => {
-        const userData = { email, phoneNumber, role, firstName, lastName, planType };
+    const login = (id: number, email: string, phoneNumber: string, role: string, firstName: string, lastName: string, planType: string) => {
+        const userData = { id, email, phoneNumber, role, firstName, lastName, planType };
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
     };

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Phone, Mail, MapPin, Star, ShieldCheck, UserCheck } from 'lucide-react';
+import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Phone, Mail, MapPin, Star, ShieldCheck, UserCheck, Award, Users } from 'lucide-react';
 // import { useTranslation } from 'react-i18next';
-import api from '../services/api';
+import api, { propertyApi } from '../services/api';
 
-type Tab = 'properties' | 'notaries' | 'inspectors' | 'agents';
+type Tab = 'properties' | 'users' | 'notaries' | 'inspectors' | 'agents';
 
 interface Professional {
     id?: number;
@@ -28,26 +28,55 @@ const AdminDashboard: React.FC = () => {
     const [notaries, setNotaries] = useState<Professional[]>([]);
     const [inspectors, setInspectors] = useState<Professional[]>([]);
     const [agents, setAgents] = useState<Professional[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+
+    // Pagination & Filter states for properties
+    const [statusFilter, setStatusFilter] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     // Modal states for CRUD
     const [showModal, setShowModal] = useState(false);
     const [currentEntity, setCurrentEntity] = useState<Professional | null>(null);
 
+    // Scoring modal states
+    const [showScoreModal, setShowScoreModal] = useState(false);
+    const [currentPropertyForScore, setCurrentPropertyForScore] = useState<any | null>(null);
+    const [scoreForm, setScoreForm] = useState({
+        priceReasonablenessScore: 0,
+        rentalPerformanceScore: 0,
+        sellerMotivationScore: 0,
+        propertyConditionScore: 0,
+        transactionComplexityScore: 0
+    });
+
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [activeTab, statusFilter]);
+
     useEffect(() => {
         fetchData();
-    }, [activeTab]);
+    }, [activeTab, statusFilter, currentPage]);
 
     const fetchData = async () => {
         setLoading(true);
         try {
             if (activeTab === 'properties') {
-                const res = await api.get('/admin/properties/search');
+                const res = await api.get('/admin/properties/search', {
+                    params: {
+                        status: statusFilter || undefined,
+                        page: currentPage,
+                        size: 8
+                    }
+                });
                 setProperties(res.data.content || []);
+                setTotalPages(res.data.totalPages || 0);
             } else {
                 const res = await api.get(`/admin/${activeTab}`);
                 if (activeTab === 'notaries') setNotaries(res.data);
                 if (activeTab === 'inspectors') setInspectors(res.data);
                 if (activeTab === 'agents') setAgents(res.data);
+                if (activeTab === 'users') setUsers(res.data);
             }
         } catch (err) {
             console.error(err);
@@ -78,6 +107,37 @@ const AdminDashboard: React.FC = () => {
         } catch (err) { console.error(err); }
     };
 
+    const handleOpenScoreModal = (property: any) => {
+        setCurrentPropertyForScore(property);
+        setScoreForm({
+            priceReasonablenessScore: property.priceReasonablenessScore || 0,
+            rentalPerformanceScore: property.rentalPerformanceScore || 0,
+            sellerMotivationScore: property.sellerMotivationScore || 0,
+            propertyConditionScore: property.propertyConditionScore || 0,
+            transactionComplexityScore: property.transactionComplexityScore || 0
+        });
+        setShowScoreModal(true);
+    };
+
+    const handleScoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const numValue = parseFloat(value) || 0;
+        setScoreForm(prev => ({
+            ...prev,
+            [name]: numValue
+        }));
+    };
+
+    const handleSaveScore = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!currentPropertyForScore) return;
+        try {
+            await propertyApi.updateScore(currentPropertyForScore.id, scoreForm);
+            setShowScoreModal(false);
+            fetchData();
+        } catch (err) { console.error(err); }
+    };
+
     const handleSaveEntity = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentEntity) return;
@@ -94,22 +154,22 @@ const AdminDashboard: React.FC = () => {
 
     const tabConfig = [
         { id: 'properties', label: 'Properties', icon: <Home size={18} /> },
+        { id: 'users', label: 'Users', icon: <Users size={18} /> },
         { id: 'notaries', label: 'Notaries', icon: <ShieldCheck size={18} /> },
         { id: 'inspectors', label: 'Inspectors', icon: <Search size={18} /> },
         { id: 'agents', label: 'Agents', icon: <UserCheck size={18} /> },
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
-            {/* Sidebar */}
-            <div className="w-72 bg-[#0b1221] text-white p-6 sticky top-0 h-screen">
+        <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+            {/* Sidebar — Desktop only */}
+            <div className="hidden md:flex md:flex-col w-72 bg-[#0b1221] text-white p-6 sticky top-0 h-screen">
                 <div className="flex items-center gap-3 mb-12 px-2">
                     <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
                         <LayoutDashboard size={20} />
                     </div>
                     <span className="font-black tracking-tight text-xl">ADMIN PANEL</span>
                 </div>
-
                 <nav className="space-y-2">
                     {tabConfig.map((tab) => (
                         <button
@@ -127,19 +187,38 @@ const AdminDashboard: React.FC = () => {
                 </nav>
             </div>
 
+            {/* Mobile Tab Bar */}
+            <div className="md:hidden bg-[#0b1221] text-white px-2 py-2 sticky top-0 z-10">
+                <div className="flex overflow-x-auto gap-1 scrollbar-hide">
+                    {tabConfig.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as Tab)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all text-xs font-black uppercase tracking-wide ${activeTab === tab.id
+                                ? 'bg-blue-600 text-white'
+                                : 'text-slate-400 hover:text-white hover:bg-white/10'
+                                }`}
+                        >
+                            {tab.icon}
+                            <span>{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             {/* Main Content */}
-            <div className="flex-1 p-10 overflow-y-auto">
-                <div className="flex justify-between items-center mb-10">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight uppercase">
+            <div className="flex-1 p-4 md:p-10 overflow-y-auto">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 md:mb-10">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight uppercase">
                         {activeTab} Management
                     </h1>
-                    {activeTab !== 'properties' && (
+                    {activeTab !== 'properties' && activeTab !== 'users' && (
                         <button
                             onClick={() => {
                                 setCurrentEntity({ name: '', address: '', phone: '', email: '', languages: ['EN', 'FR'], rating: 5 });
                                 setShowModal(true);
                             }}
-                            className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
+                            className="bg-blue-600 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 self-start"
                         >
                             <Plus size={16} /> Add New {activeTab.slice(0, -1)}
                         </button>
@@ -158,66 +237,160 @@ const AdminDashboard: React.FC = () => {
                         className="space-y-6"
                     >
                         {activeTab === 'properties' ? (
+                            <div className="space-y-6">
+                                {/* Filters Row */}
+                                <div className="flex justify-start">
+                                    <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 min-w-[240px]">
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Filter Status:</span>
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value)}
+                                            className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest text-slate-900 cursor-pointer w-full"
+                                        >
+                                            <option value="">All Statuses</option>
+                                            <option value="PENDING">Pending Approval</option>
+                                            <option value="APPROVED">Approved</option>
+                                            <option value="EXPIRED">Expired </option>
+                                            <option value="REFUSED">Refused</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left min-w-[600px]">
+                                            <thead className="bg-slate-50 border-b border-slate-100">
+                                                <tr>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {properties.map((p) => (
+                                                    <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-8 py-6">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-16 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0">
+                                                                    {p.imageUrls?.[0] && <img src={p.imageUrls[0]} className="w-full h-full object-cover" />}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-black text-slate-900 text-sm truncate max-w-xs">{p.title}</p>
+                                                                    <p className="text-xs text-slate-400 font-medium">{p.address}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <span className="px-3 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-full uppercase tracking-widest">{p.type}</span>
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${p.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600' : p.status === 'REFUSED' ? 'bg-rose-50 text-rose-600' : p.status === 'EXPIRED' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600'
+                                                                }`}>
+                                                                {p.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 md:px-8 py-4 md:py-6 text-right space-x-1 md:space-x-2">
+                                                            {p.status === 'PENDING' && (
+                                                                <>
+                                                                    <button onClick={() => handleApprove(p.id)} className="p-2 md:p-3 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Approve">
+                                                                        <CheckCircle size={18} />
+                                                                    </button>
+                                                                    <button onClick={() => handleRefuse(p.id)} className="p-2 md:p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Refuse">
+                                                                        <XCircle size={18} />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            <button onClick={() => handleOpenScoreModal(p)} className="p-2 md:p-3 text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="Score Property">
+                                                                <Award size={18} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {properties.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">No properties found.</div>}
+
+                                    {/* Pagination UI */}
+                                    {totalPages > 1 && (
+                                        <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                                            <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                                Page {currentPage + 1} of {totalPages}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    disabled={currentPage === 0}
+                                                    onClick={() => setCurrentPage(prev => prev - 1)}
+                                                    className="px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                >
+                                                    Previous
+                                                </button>
+                                                <button
+                                                    disabled={currentPage >= totalPages - 1}
+                                                    onClick={() => setCurrentPage(prev => prev + 1)}
+                                                    className="px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : activeTab === 'users' ? (
                             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50 border-b border-slate-100">
-                                        <tr>
-                                            <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property</th>
-                                            <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                                            <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                            <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                        {properties.map((p) => (
-                                            <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-8 py-6">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-16 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                                                            {p.imageUrls?.[0] && <img src={p.imageUrls[0]} className="w-full h-full object-cover" />}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-black text-slate-900 text-sm truncate max-w-xs">{p.title}</p>
-                                                            <p className="text-xs text-slate-400 font-medium">{p.address}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <span className="px-3 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-full uppercase tracking-widest">{p.type}</span>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${p.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600' : p.status === 'REFUSED' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
-                                                        }`}>
-                                                        {p.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-6 text-right space-x-2">
-                                                    {p.status === 'PENDING' && (
-                                                        <>
-                                                            <button onClick={() => handleApprove(p.id)} className="p-3 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Approve">
-                                                                <CheckCircle size={20} />
-                                                            </button>
-                                                            <button onClick={() => handleRefuse(p.id)} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Refuse">
-                                                                <XCircle size={20} />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </td>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left min-w-[500px]">
+                                        <thead className="bg-slate-50 border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">User ID</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status / Role</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                {properties.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">No properties found.</div>}
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {users.map((u) => (
+                                                <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-8 py-6">
+                                                        <span className="font-black text-slate-900 text-sm">#{u.id}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold text-sm">
+                                                                {u.email ? u.email.charAt(0).toUpperCase() : '?'}
+                                                            </div>
+                                                            <span className="font-bold text-slate-700 text-sm">{u.email}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex gap-2">
+                                                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-full uppercase tracking-widest">Active</span>
+                                                            {u.role && <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-black rounded-full uppercase tracking-widest">{u.role}</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right">
+                                                        <button onClick={() => handleDelete(u.id)} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Delete User">
+                                                            <Trash2 size={20} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {users.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">No users found.</div>}
                             </div>
                         ) : (
                             /* Professional Grid List */
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                {(activeTab === 'notaries' ? notaries : activeTab === 'inspectors' ? inspectors : agents).map((entity) => (
+                                {((activeTab as string) === 'notaries' ? notaries : (activeTab as string) === 'inspectors' ? inspectors : agents).map((entity) => (
                                     <div key={entity.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="flex gap-5">
                                                 <div className="w-16 h-16 bg-blue-50 border border-blue-100 rounded-3xl flex items-center justify-center text-blue-600 shrink-0 transform group-hover:scale-110 transition-transform">
-                                                    {activeTab === 'notaries' ? <ShieldCheck size={28} /> : activeTab === 'inspectors' ? <Search size={28} /> : <UserCheck size={28} />}
+                                                    {(activeTab as string) === 'notaries' ? <ShieldCheck size={28} /> : (activeTab as string) === 'inspectors' ? <Search size={28} /> : <UserCheck size={28} />}
                                                 </div>
                                                 <div>
                                                     <h3 className="text-xl font-black text-slate-900 tracking-tight mb-1">{entity.name}</h3>
@@ -367,6 +540,130 @@ const AdminDashboard: React.FC = () => {
                                         className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20"
                                     >
                                         Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+            {/* Scoring Modal */}
+            <AnimatePresence>
+                {showScoreModal && currentPropertyForScore && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200]" onClick={() => setShowScoreModal(false)} />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl z-[201] overflow-hidden">
+                            <form onSubmit={handleSaveScore} className="p-10">
+                                <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+                                    Score Property
+                                </h2>
+                                <p className="text-sm font-bold text-slate-500 mb-8">{currentPropertyForScore.title}</p>
+
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                                            Price Reasonableness (0-2 points)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="priceReasonablenessScore"
+                                            step="0.1"
+                                            min="0"
+                                            max="2"
+                                            required
+                                            value={scoreForm.priceReasonablenessScore}
+                                            onChange={handleScoreChange}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                                            Rental Performance (0-2 points)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="rentalPerformanceScore"
+                                            step="0.1"
+                                            min="0"
+                                            max="2"
+                                            required
+                                            value={scoreForm.rentalPerformanceScore}
+                                            onChange={handleScoreChange}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                                            Seller Motivation (0-2 points)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="sellerMotivationScore"
+                                            step="0.1"
+                                            min="0"
+                                            max="2"
+                                            required
+                                            value={scoreForm.sellerMotivationScore}
+                                            onChange={handleScoreChange}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                                            Property Condition (0-2 points)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="propertyConditionScore"
+                                            step="0.1"
+                                            min="0"
+                                            max="2"
+                                            required
+                                            value={scoreForm.propertyConditionScore}
+                                            onChange={handleScoreChange}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
+                                            Transaction Complexity (0-2 points)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="transactionComplexityScore"
+                                            step="0.1"
+                                            min="0"
+                                            max="2"
+                                            required
+                                            value={scoreForm.transactionComplexityScore}
+                                            onChange={handleScoreChange}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 p-6 bg-blue-50 rounded-2xl">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-black text-blue-600 uppercase tracking-widest">Overall Score</span>
+                                        <span className="text-2xl font-black text-blue-600">
+                                            {(scoreForm.priceReasonablenessScore + scoreForm.rentalPerformanceScore + scoreForm.sellerMotivationScore + scoreForm.propertyConditionScore + scoreForm.transactionComplexityScore).toFixed(1)} / 10
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 mt-8">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowScoreModal(false)}
+                                        className="flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20"
+                                    >
+                                        Save Score
                                     </button>
                                 </div>
                             </form>

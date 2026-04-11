@@ -165,63 +165,45 @@ const Home: React.FC = () => {
                         transition={{ duration: 0.8, ease: "easeOut" }}
                         className="text-center mb-12"
                     >
-                        <h1 className="whitespace-pre-line leading-tight text-4xl md:text-4xl font-black text-white mb-6 tracking-tighter drop-shadow-2xl">
+                        <h1 className="whitespace-pre-line leading-tight text-xl md:text-4xl  font-black text-white mb-6 tracking-tighter drop-shadow-2xl">
                             {t('home.hero_title')}
                         </h1>
-                        <p className="text-lg text-white/90 font-medium tracking-wide">
+                        <p className="text-xs md:text-base lg:text-lg text-white/90 font-medium tracking-wide">
                             {t('home.hero_subtitle')}
                         </p>
                     </motion.div>
 
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center w-full px-4">
                         {/* Transaction Toggle - Centered Pill Style */}
-                        <div className="flex bg-slate-100/30 backdrop-blur-md p-1.5 rounded-2xl mb-4 self-center border border-white/20">
+                        <div className="flex bg-slate-100/30 backdrop-blur-md p-1.5 rounded-2xl mb-4 sm:mb-6 self-center border border-white/20">
                             <button
                                 onClick={() => setTransactionType('FOR_SALE')}
-                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${transactionType === 'FOR_SALE' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:bg-white/40'}`}
+                                className={`flex items-center gap-1.5 sm:gap-3 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all ${transactionType === 'FOR_SALE' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:bg-white/40'}`}
                             >
-                                <HomeIcon size={18} />
-                                {t('home.buy')}
+                                <HomeIcon size={16} className="sm:size-5" />
+                                <span className="whitespace-nowrap">{t('home.buy')}</span>
                             </button>
                             <button
                                 onClick={() => setTransactionType('FOR_RENT')}
-                                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${transactionType === 'FOR_RENT' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:bg-white/40'}`}
+                                className={`flex items-center gap-1.5 sm:gap-3 px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-bold transition-all ${transactionType === 'FOR_RENT' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:bg-white/40'}`}
                             >
-                                <Zap size={18} />
-                                {t('home.rent')}
+                                <Zap size={16} className="sm:size-5" />
+                                <span className="whitespace-nowrap">{t('home.rent')}</span>
                             </button>
                         </div>
 
                         {/* Multi-Column Search Card */}
-                        <div className="w-full bg-white rounded-[2rem] shadow-2xl shadow-black/10 overflow-hidden">
-                            <div className="p-8 pb-4">
-                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                                    {/* Keyword Input */}
-                                    {/* <div className="md:col-span-4 space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">
-                                            {t('home.label_keyword')}
-                                        </label>
-                                        <div className="relative group">
-                                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
-                                            <input
-                                                type="text"
-                                                placeholder={t('home.search_placeholder')}
-                                                className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition-all"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                            />
-                                        </div>
-                                    </div> */}
-
+                        <div className="w-full bg-white rounded-2xl sm:rounded-[2rem] shadow-xl sm:shadow-2xl shadow-black/10 overflow-hidden">
+                            <div className="p-4 sm:p-6 md:p-8 pb-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4 items-end">
                                     {/* Area Select */}
-                                    <div className="md:col-span-4 space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">
+                                    <div className="sm:col-span-1 md:col-span-4 space-y-1.5 sm:space-y-2">
+                                        <label className="block text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest pl-3 sm:pl-4">
                                             {t('home.label_area')}
                                         </label>
                                         <div className="relative">
                                             <select
-                                                className="w-full pl-5 pr-10 py-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition-all cursor-pointer truncate"
+                                                className="w-full pl-3 sm:pl-5 pr-10 py-3 sm:py-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 text-sm sm:text-base appearance-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition-all cursor-pointer truncate"
                                                 value={selectedArea}
                                                 onChange={(e) => setSelectedArea(e.target.value)}
                                             >
@@ -230,18 +212,18 @@ const Home: React.FC = () => {
                                                 <option value="Quebec City Region">{t('home.area_quebec')}</option>
                                                 <option value="Sherbrooke Region">{t('home.area_sherbrooke')}</option>
                                             </select>
-                                            <SlidersHorizontal className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                                            <SlidersHorizontal className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none size-4 sm:size-[16px]" />
                                         </div>
                                     </div>
 
                                     {/* Type Select */}
-                                    <div className="md:col-span-3 space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">
+                                    <div className="sm:col-span-1 md:col-span-3 space-y-1.5 sm:space-y-2">
+                                        <label className="block text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest pl-3 sm:pl-4">
                                             {t('home.label_type')}
                                         </label>
                                         <div className="relative">
                                             <select
-                                                className="w-full pl-5 pr-10 py-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 appearance-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition-all cursor-pointer"
+                                                className="w-full pl-3 sm:pl-5 pr-10 py-3 sm:py-4 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-900 text-sm sm:text-base appearance-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition-all cursor-pointer"
                                                 value={selectedType}
                                                 onChange={(e) => setSelectedType(e.target.value)}
                                             >
@@ -251,54 +233,38 @@ const Home: React.FC = () => {
                                                 <option value="PLEX">{t('home.type_plex')}</option>
                                                 <option value="COMMERCIAL">{t('home.type_commercial')}</option>
                                             </select>
-                                            <SlidersHorizontal className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                                            <SlidersHorizontal className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none size-4 sm:size-[16px]" />
                                         </div>
                                     </div>
 
                                     {/* Price Range */}
-                                    <div className="md:col-span-5 space-y-2">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-4">
+                                    <div className="sm:col-span-2 md:col-span-5 space-y-1.5 sm:space-y-2">
+                                        <label className="block text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest pl-3 sm:pl-4">
                                             {t('home.label_price_range')}
                                         </label>
-                                        <div className="flex items-center gap-1.5 p-1 bg-slate-50 border border-slate-100 rounded-xl group focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white transition-all">
+                                        <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-50 border border-slate-100 rounded-xl group focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white transition-all">
                                             <input
                                                 type="number"
                                                 min={0}
                                                 placeholder={t('home.min_price')}
-                                                className="w-full pl-3 pr-1 py-3 bg-transparent font-bold text-slate-900 outline-none text-xs"
+                                                className="w-full pl-2 sm:pl-3 pr-1 py-2.5 sm:py-3 bg-transparent font-bold text-slate-900 outline-none text-xs sm:text-sm"
                                                 value={minPrice}
                                                 onChange={(e) => setMinPrice(e.target.value)}
                                             />
-                                            <div className="text-slate-300 font-bold text-xs px-1">-</div>
+                                            <div className="text-slate-300 font-bold text-[10px] sm:text-xs px-0.5 sm:px-1">-</div>
                                             <input
                                                 type="number"
                                                 min={minPrice || 0}
                                                 placeholder={t('home.max_price')}
-                                                className="w-full pl-1 pr-3 py-3 bg-transparent font-bold text-slate-900 outline-none text-xs"
+                                                className="w-full pl-1 pr-2 sm:pl-1 pr-3 py-2.5 sm:py-3 bg-transparent font-bold text-slate-900 outline-none text-xs sm:text-sm"
                                                 value={maxPrice}
                                                 onChange={(e) => {
                                                     const newMaxPrice = e.target.value;
-                                                    // // If max price is less than min price, adjust it
-                                                    // if (newMaxPrice && minPrice && Number(newMaxPrice) < Number(minPrice)) {
-                                                    //     setMaxPrice(minPrice);
-                                                    // } else {
                                                     setMaxPrice(newMaxPrice);
-                                                    // }
                                                 }}
                                             />
                                         </div>
                                     </div>
-
-                                    {/* Search Button */}
-                                    {/* <div className="md:col-span-12 mt-4">
-                                        <button
-                                            onClick={handleSearch}
-                                            className="w-full h-[58px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20"
-                                        >
-                                            <Search size={20} />
-                                            {t('home.search_button')}
-                                        </button>
-                                    </div> */}
                                 </div>
                             </div>
                         </div>
@@ -340,147 +306,148 @@ const Home: React.FC = () => {
                                 {t('common.summary')}
                             </button> */}
                         </div>
+                        <div className="flex flex-row items-center justify-between w-full md:contents">
+                            <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2 ">
+                                <span className="text-sm font-bold text-slate-600 tracking-tight">
+                                    <span className="font-black text-slate-900">{totalProperty}</span> {t('properties.found')}
+                                </span>
+                            </div>
 
-                        <div className="lg:absolute lg:left-1/2 lg:-translate-x-1/2 order-2">
-                            <span className="text-sm font-bold text-slate-600 tracking-tight">
-                                <span className="font-black text-slate-900">{totalProperty}</span> {t('properties.found')}
-                            </span>
-                        </div>
+                            <div className="flex items-center gap-4 lg:order-3 relative">
+                                <button
+                                    onClick={() => setIsSortOpen(!isSortOpen)}
+                                    className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group"
+                                >
+                                    {sortCriteria.length === 0 ? t('common.sort_by') :
+                                        sortCriteria.map(c => {
+                                            let fieldLabel: string;
+                                            let directionLabel: string;
 
-                        <div className="flex items-center gap-4 order-1 lg:order-3 relative">
-                            <button
-                                onClick={() => setIsSortOpen(!isSortOpen)}
-                                className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group"
-                            >
-                                {sortCriteria.length === 0 ? t('common.sort_by') :
-                                    sortCriteria.map(c => {
-                                        let fieldLabel: string;
-                                        let directionLabel: string;
+                                            switch (c.field) {
+                                                case 'price':
+                                                    fieldLabel = t('common.sort_price_group');
+                                                    directionLabel = c.direction === 'desc' ? t('common.price_high_low') : t('common.price_low_high');
+                                                    break;
+                                                case 'capRate':
+                                                    fieldLabel = t('common.sort_cap_rate_group');
+                                                    directionLabel = c.direction === 'desc' ? t('common.sort_cap_rate_high_low') : t('common.sort_cap_rate_low_high');
+                                                    break;
+                                                case 'publishDate':
+                                                default:
+                                                    fieldLabel = t('common.sort_date_group');
+                                                    directionLabel = c.direction === 'desc' ? t('common.sort_date_desc') : t('common.sort_date_asc');
+                                            }
+                                            return `${fieldLabel} (${directionLabel})`;
+                                        }).join(', ')}
+                                    <ChevronDown size={14} className={`transition-transform ${isSortOpen ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
+                                </button>
 
-                                        switch (c.field) {
-                                            case 'price':
-                                                fieldLabel = t('common.sort_price_group');
-                                                directionLabel = c.direction === 'desc' ? t('common.price_high_low') : t('common.price_low_high');
-                                                break;
-                                            case 'capRate':
-                                                fieldLabel = t('common.sort_cap_rate_group');
-                                                directionLabel = c.direction === 'desc' ? t('common.sort_cap_rate_high_low') : t('common.sort_cap_rate_low_high');
-                                                break;
-                                            case 'publishDate':
-                                            default:
-                                                fieldLabel = t('common.sort_date_group');
-                                                directionLabel = c.direction === 'desc' ? t('common.sort_date_desc') : t('common.sort_date_asc');
-                                        }
-                                        return `${fieldLabel} (${directionLabel})`;
-                                    }).join(', ')}
-                                <ChevronDown size={14} className={`transition-transform ${isSortOpen ? 'rotate-180' : 'group-hover:translate-y-0.5'}`} />
-                            </button>
+                                <AnimatePresence>
+                                    {isSortOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setIsSortOpen(false)} />
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-slate-100 py-4 z-20 overflow-hidden"
+                                            >
+                                                {/* Current Sort Criteria Display */}
+                                                {sortCriteria.length > 0 && (
+                                                    <div className="px-4 pb-3 mb-2 border-b border-slate-100">
+                                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                            {t('common.active_sorting')}
+                                                        </div>
+                                                        {sortCriteria.map((criteria, index) => {
+                                                            let fieldKey: string;
+                                                            switch (criteria.field) {
+                                                                case 'price':
+                                                                    fieldKey = 'sort_price_group';
+                                                                    break;
+                                                                case 'capRate':
+                                                                    fieldKey = 'sort_cap_rate_group';
+                                                                    break;
+                                                                default:
+                                                                    fieldKey = 'sort_date_group';
+                                                            }
+                                                            const directionKey = criteria.direction === 'desc' ? 'high_to_low' : 'low_to_high';
+                                                            return (
+                                                                <div key={index} className="flex items-center justify-between py-1">
+                                                                    <span className="text-sm text-slate-700">
+                                                                        {t(`common.${fieldKey}`)} - {t(`common.${directionKey}`)}
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const newCriteria = [...sortCriteria];
+                                                                            newCriteria.splice(index, 1);
+                                                                            setSortCriteria(newCriteria);
+                                                                        }}
+                                                                        className="text-red-500 hover:text-red-700 text-sm font-bold"
+                                                                    >
+                                                                        {t('common.remove')}
+                                                                    </button>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
 
-                            <AnimatePresence>
-                                {isSortOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsSortOpen(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] border border-slate-100 py-4 z-20 overflow-hidden"
-                                        >
-                                            {/* Current Sort Criteria Display */}
-                                            {sortCriteria.length > 0 && (
-                                                <div className="px-4 pb-3 mb-2 border-b border-slate-100">
+                                                {/* sorting */}
+                                                <div className="px-4 pt-3">
                                                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                                        {t('common.active_sorting')}
+                                                        {t('common.sort_price_group')}
                                                     </div>
-                                                    {sortCriteria.map((criteria, index) => {
-                                                        let fieldKey: string;
-                                                        switch (criteria.field) {
-                                                            case 'price':
-                                                                fieldKey = 'sort_price_group';
-                                                                break;
-                                                            case 'capRate':
-                                                                fieldKey = 'sort_cap_rate_group';
-                                                                break;
-                                                            default:
-                                                                fieldKey = 'sort_date_group';
-                                                        }
-                                                        const directionKey = criteria.direction === 'desc' ? 'high_to_low' : 'low_to_high';
-                                                        return (
-                                                            <div key={index} className="flex items-center justify-between py-1">
-                                                                <span className="text-sm text-slate-700">
-                                                                    {t(`common.${fieldKey}`)} - {t(`common.${directionKey}`)}
-                                                                </span>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const newCriteria = [...sortCriteria];
-                                                                        newCriteria.splice(index, 1);
-                                                                        setSortCriteria(newCriteria);
-                                                                    }}
-                                                                    className="text-red-500 hover:text-red-700 text-sm font-bold"
-                                                                >
-                                                                    {t('common.remove')}
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
 
-                                            {/* sorting */}
-                                            <div className="px-4 pt-3">
-                                                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                                    {t('common.sort_price_group')}
-                                                </div>
-
-                                                <div className="space-y-1">
-                                                    <button
-                                                        onClick={() => addOrUpdateSort('price', 'desc')}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'price' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                    >
-                                                        {t('common.price_high_low')}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => addOrUpdateSort('price', 'asc')}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'price' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                    >
-                                                        {t('common.price_low_high')}
-                                                    </button>
-                                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                                                        {t('common.sort_date_group')}
+                                                    <div className="space-y-1">
+                                                        <button
+                                                            onClick={() => addOrUpdateSort('price', 'desc')}
+                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'price' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            {t('common.price_high_low')}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => addOrUpdateSort('price', 'asc')}
+                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'price' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            {t('common.price_low_high')}
+                                                        </button>
+                                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                            {t('common.sort_date_group')}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => addOrUpdateSort('publishDate', 'desc')}
+                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'publishDate' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            {t('common.sort_date_desc')}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => addOrUpdateSort('publishDate', 'asc')}
+                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'publishDate' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            {t('common.sort_date_asc')}
+                                                        </button>
+                                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-4">
+                                                            {t('common.sort_cap_rate_group')}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => addOrUpdateSort('capRate', 'desc')}
+                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'capRate' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            {t('common.sort_cap_rate_high_low')}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => addOrUpdateSort('capRate', 'asc')}
+                                                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'capRate' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                                                        >
+                                                            {t('common.sort_cap_rate_low_high')}
+                                                        </button>
                                                     </div>
-                                                    <button
-                                                        onClick={() => addOrUpdateSort('publishDate', 'desc')}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'publishDate' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                    >
-                                                        {t('common.sort_date_desc')}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => addOrUpdateSort('publishDate', 'asc')}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'publishDate' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                    >
-                                                        {t('common.sort_date_asc')}
-                                                    </button>
-                                                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-4">
-                                                        {t('common.sort_cap_rate_group')}
-                                                    </div>
-                                                    <button
-                                                        onClick={() => addOrUpdateSort('capRate', 'desc')}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'capRate' && c.direction === 'desc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                    >
-                                                        {t('common.sort_cap_rate_high_low')}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => addOrUpdateSort('capRate', 'asc')}
-                                                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${sortCriteria.some(c => c.field === 'capRate' && c.direction === 'asc') ? 'bg-blue-50 text-blue-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
-                                                    >
-                                                        {t('common.sort_cap_rate_low_high')}
-                                                    </button>
                                                 </div>
-                                            </div>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </div>
 
@@ -544,7 +511,7 @@ const Home: React.FC = () => {
             </section>
 
             {/* Why Choose MAQC & How It Works - Redesigned Section */}
-            <section className="relative overflow-hidden pt-32 pb-40">
+            <section className="relative overflow-hidden pt-16 pb-20 md:pt-32 md:pb-40">
                 {/* Vibrant Blue Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-b from-blue-700 via-blue-600 to-blue-800" />
                 <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
@@ -553,21 +520,37 @@ const Home: React.FC = () => {
                 </div>
 
                 <div className="max-w-[1400px] mx-auto px-8 relative z-10">
-                    <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-white/90 text-[11px] font-black uppercase tracking-widest mb-6 border border-white/10">
-                            <TrendingUp size={12} />
+                    <div className="text-center mb-8 md:mb-16">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-white/90 text-[10px] md:text-[11px] font-black uppercase tracking-widest mb-4 md:mb-6 border border-white/10">
+                            <TrendingUp size={10} className="md:hidden" />
+                            <TrendingUp size={12} className="hidden md:block" />
                             {t('home.network_badge')}
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4">
+                        <h2 className="text-xl md:text-4xl font-black text-white tracking-tighter mb-2 md:mb-4">
                             {t('fsbo.why_title')}
                         </h2>
-                        <p className="text-blue-100 text-lg font-medium opacity-80">
+                        <p className="text-blue-100 text-xs md:text-base font-medium opacity-80 leading-relaxed">
                             {t('fsbo.why_subtitle')}
                         </p>
                     </div>
 
-                    {/* Why Choose Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+                    {/* Why Choose - Mobile: Simple horizontal titles, Desktop: Cards with icons */}
+                    {/* Mobile Layout */}
+                    <div className="flex md:hidden overflow-x-auto pb-4 -mx-4 px-4 gap-4 mb-12">
+                        {[
+                            { title: 'card_zero_title' },
+                            { title: 'card_support_title' },
+                            { title: 'card_fast_title' },
+                            { title: 'card_exposure_title' }
+                        ].map((card, i) => (
+                            <div key={i} className="flex-shrink-0 bg-white/10 backdrop-blur-md border border-white/10 px-4 py-3 rounded-xl">
+                                <h4 className="text-sm font-black text-white whitespace-nowrap">{t(`fsbo.${card.title}`)}</h4>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Desktop Layout */}
+                    <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-16 md:mb-24">
                         {[
                             { icon: <TrendingUp size={24} />, title: 'card_zero_title', desc: 'card_zero_desc' },
                             { icon: <Star size={24} />, title: 'card_support_title', desc: 'card_support_desc' },
@@ -577,24 +560,44 @@ const Home: React.FC = () => {
                             <motion.div
                                 key={i}
                                 whileHover={{ y: -5 }}
-                                className="bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[2rem] text-white hover:bg-white/15 transition-all"
+                                className="bg-white/10 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-2xl md:rounded-[2rem] text-white hover:bg-white/15 transition-all"
                             >
-                                <div className="text-blue-200 mb-8">{card.icon}</div>
-                                <h4 className="text-lg font-black mb-2">{t(`fsbo.${card.title}`)}</h4>
-                                <p className="text-sm text-blue-100/70 font-medium leading-relaxed">{t(`fsbo.${card.desc}`)}</p>
+                                <div className="text-blue-200 mb-4 md:mb-8 flex items-center justify-center">
+                                    {card.icon}
+                                </div>
+                                <h4 className="text-base md:text-lg font-black mb-1 md:mb-2">{t(`fsbo.${card.title}`)}</h4>
+                                <p className="text-xs md:text-sm text-blue-100/70 font-medium leading-relaxed">{t(`fsbo.${card.desc}`)}</p>
                             </motion.div>
                         ))}
                     </div>
 
                     {/* How It Works - Steps Section */}
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[3rem] p-12 md:p-16">
-                        <div className="text-center mb-16">
-                            <h3 className="text-2xl font-black text-white uppercase tracking-widest">{t('fsbo.steps_title')}</h3>
+                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-[3rem] p-6 md:p-8 lg:p-12">
+                        <div className="text-center mb-4 md:mb-12">
+                            <h3 className="text-base md:text-lg lg:text-xl font-black text-white uppercase tracking-widest">{t('fsbo.steps_title')}</h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 relative">
+                        {/* Mobile: Horizontal layout without circles */}
+                        <div className="flex md:hidden overflow-x-auto pb-4 -mx-4 px-4 gap-6">
+                            {[
+                                { title: 'step1_title' },
+                                { title: 'step2_title' },
+                                { title: 'step3_title' },
+                                { title: 'step4_title' }
+                            ].map((s, i) => (
+                                <div key={i} className="flex-shrink-0 flex flex-col items-center text-center min-w-[100px]">
+                                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg font-black shadow-lg mb-3">
+                                        {i + 1}
+                                    </div>
+                                    <h5 className="text-white font-black text-xs uppercase tracking-wider leading-tight">{t(`fsbo.${s.title}`)}</h5>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop: Vertical layout with circles and connection lines */}
+                        <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 lg:gap-12 relative">
                             {/* Connection Lines (Hidden on Mobile) */}
-                            <div className="hidden md:block absolute top-[2.5rem] left-[15%] right-[15%] h-[1px] bg-white/10" />
+                            <div className="hidden lg:block absolute top-[2rem] left-[15%] right-[15%] h-[1px] bg-white/10" />
 
                             {[
                                 { step: 1, title: 'step1_title', desc: 'step1_desc' },
@@ -603,11 +606,11 @@ const Home: React.FC = () => {
                                 { step: 4, title: 'step4_title', desc: 'step4_desc' }
                             ].map((s, i) => (
                                 <div key={i} className="relative z-10 flex flex-col items-center text-center group">
-                                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-2xl font-black shadow-2xl mb-8 group-hover:scale-110 transition-transform">
+                                    <div className="w-16 md:w-20 h-16 md:h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-xl md:text-2xl font-black shadow-2xl mb-4 md:mb-8 group-hover:scale-110 transition-transform">
                                         {s.step}
                                     </div>
-                                    <h5 className="text-white font-black text-sm uppercase tracking-widest mb-3">{t(`fsbo.${s.title}`)}</h5>
-                                    <p className="text-blue-100/60 text-xs font-medium leading-relaxed px-4">{t(`fsbo.${s.desc}`)}</p>
+                                    <h5 className="text-white font-black text-sm md:text-sm uppercase tracking-widest mb-2 md:mb-3">{t(`fsbo.${s.title}`)}</h5>
+                                    <p className="text-blue-100/60 text-xs md:text-sm font-medium leading-relaxed px-2 md:px-4">{t(`fsbo.${s.desc}`)}</p>
                                 </div>
                             ))}
                         </div>
@@ -623,12 +626,12 @@ const Home: React.FC = () => {
                     </div>
 
                     {/* Platform Description below section */}
-                    <div className="mt-20 text-center max-w-4xl mx-auto border-t border-white/10 pt-20 pb-10">
-                        <h4 className="text-white font-black text-xl mb-6 uppercase tracking-wider">{t('fsbo.footer_about')}</h4>
-                        <p className="text-blue-100/60 text-sm font-medium leading-loose">
+                    {/* <div className="mt-8 md:mt-16 text-center max-w-4xl mx-auto border-t border-white/10 pt-8 md:pt-16 pb-8">
+                        <h4 className="text-white font-black text-base md:text-xl mb-3 md:mb-6 uppercase tracking-wider">{t('fsbo.footer_about')}</h4>
+                        <p className="text-blue-100/60 text-xs md:text-sm font-medium leading-loose">
                             {t('fsbo.footer_desc')}
                         </p>
-                    </div>
+                    </div> */}
                 </div>
             </section>
         </div>
@@ -636,3 +639,4 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+

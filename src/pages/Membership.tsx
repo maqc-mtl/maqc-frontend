@@ -10,7 +10,7 @@ const Membership: React.FC = () => {
     const { user } = useAuth();
 
     const handleSelectPlan = (plan: string) => {
-        navigate(`/payment?plan=${plan}`);
+        navigate(`/payment?plan=${plan.toUpperCase()}`);
     };
 
     const plans = [
@@ -119,7 +119,7 @@ const Membership: React.FC = () => {
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                     {plans.map((plan) => {
                         const IconComponent = plan.icon;
                         const isActive = user?.planType === plan.type;
@@ -163,84 +163,86 @@ const Membership: React.FC = () => {
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-xl font-bold text-center text-gray-900 mb-8">{t('membership.comparison_title')}</h2>
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-4 font-semibold text-gray-900">{t('membership.comparison_feature')}</th>
-                                    <th className="px-6 py-4 font-semibold text-gray-900 text-center">{t('nav.plan_basic')}</th>
-                                    <th className="px-6 py-4 font-semibold text-gray-900 text-center bg-blue-50/50">{t('nav.plan_plus')}</th>
-                                    <th className="px-6 py-4 font-semibold text-gray-900 text-center">{t('nav.plan_pro')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_listings')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">3 rental + 2 sale</td>
-                                    <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">6 rental + 4 sale</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">12 rental + 8 sale</td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_images')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">5</td>
-                                    <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">10</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">{t('common.unlimited', 'Unlimited')}</td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_duration')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">30 {t('common.days', 'days')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">30 {t('common.days', 'days')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">30 {t('common.days', 'days')}</td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_homepage')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_investment')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_offer')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_compliance')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_gain')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_pdf')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">-</td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50">-</td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_priority')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">-</td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50">-</td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-gray-600">{t('membership.feature_documents')}</td>
-                                    <td className="px-6 py-4 text-center text-gray-900">-</td>
-                                    <td className="px-6 py-4 text-center bg-blue-50/50">-</td>
-                                    <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left min-w-[500px]">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold text-gray-900">{t('membership.comparison_feature')}</th>
+                                        <th className="px-6 py-4 font-semibold text-gray-900 text-center">{t('nav.plan_basic')}</th>
+                                        <th className="px-6 py-4 font-semibold text-gray-900 text-center bg-blue-50/50">{t('nav.plan_plus')}</th>
+                                        <th className="px-6 py-4 font-semibold text-gray-900 text-center">{t('nav.plan_pro')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_listings')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">3 rental + 2 sale</td>
+                                        <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">6 rental + 4 sale</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">12 rental + 8 sale</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_images')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">5</td>
+                                        <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">10</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">{t('common.unlimited', 'Unlimited')}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_duration')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">30 {t('common.days', 'days')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">30 {t('common.days', 'days')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">30 {t('common.days', 'days')}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_homepage')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_investment')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_offer')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_compliance')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_gain')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900"><Check size={16} className="text-green-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50"><Check size={16} className="text-blue-500 mx-auto" /></td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_pdf')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">-</td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50">-</td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_priority')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">-</td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50">-</td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-6 py-4 text-gray-600">{t('membership.feature_documents')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">-</td>
+                                        <td className="px-6 py-4 text-center bg-blue-50/50">-</td>
+                                        <td className="px-6 py-4 text-center"><Check size={16} className="text-purple-500 mx-auto" /></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

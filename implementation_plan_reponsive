@@ -1,0 +1,139 @@
+# Full Application Responsiveness
+
+Make the entire MAQC frontend fully responsive across mobile (iOS/Android), tablet, and desktop viewports.
+
+## Breakpoints (Tailwind defaults)
+| Prefix | Min Width | Target |
+|--------|-----------|--------|
+| *(none)* | 0px | Mobile (360–480px) |
+| `sm:` | 640px | Large mobile / Small tablet |
+| `md:` | 768px | Tablet (portrait) |
+| `lg:` | 1024px | Tablet landscape / Small laptop |
+| `xl:` | 1280px | Desktop |
+
+---
+
+## Proposed Changes
+
+### 1. Global Navigation — Header (`App.tsx`)
+
+#### [MODIFY] [App.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/App.tsx)
+
+The header is currently a flat row with no mobile adaptation.
+
+**Changes:**
+- Add `isMobileMenuOpen` state
+- Add a **hamburger icon** (☰) button visible only on `< md` screens
+- Add a **slide-down / drawer mobile menu** (`AnimatePresence`-driven) with:
+  - Language switcher
+  - Tools links (if authenticated with paid plan)
+  - Login / Register or user menu items
+- Hide the desktop nav items on mobile (`hidden md:flex`)
+- Reduce header padding on mobile: `px-4 md:px-10`, `h-16 md:h-24`
+
+---
+
+### 2. Home Page (`Home.tsx`)
+
+#### [MODIFY] [Home.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/Home.tsx)
+
+**Changes:**
+- Hero section: reduce min-height, font sizes on mobile
+- Search card: already uses `grid-cols-1 md:grid-cols-12` ✅ — minor padding tweaks
+- Property grid: already `grid-cols-1 md:grid-cols-2 lg:grid-cols-4` ✅ — no change needed
+- "Why MAQC" section: already `grid-cols-1 md:grid-cols-2 lg:grid-cols-4` ✅ — padding fix for mobile
+
+---
+
+### 3. Property Detail (`PropertyDetail.tsx`)
+
+#### [MODIFY] [PropertyDetail.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/PropertyDetail.tsx)
+
+**Changes:**
+- Image gallery: simplify to single-image on mobile (hide thumbnails already via `hidden lg:block` ✅)
+- Header section: stack price/title/share on mobile (`flex-col`)
+- Tools grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` (currently `md:grid-cols-2 lg:grid-cols-4` — fine)
+- Sidebar owner card: already moves below on mobile (`lg:col-span-1`) ✅
+- All modals: already `max-w-lg` and `max-h-[90vh]` ✅ — ensure side/top padding on mobile
+
+---
+
+### 4. Admin Dashboard (`AdminDashboard.tsx`)
+
+#### [MODIFY] [AdminDashboard.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/AdminDashboard.tsx)
+
+The sidebar is currently always visible and `w-72`, which breaks on mobile.
+
+**Changes:**
+- Replace sidebar with a **top tab bar** on mobile (`flex md:hidden`)
+- Show sidebar only on `md:` and above (`hidden md:flex`)
+- Table: wrap in horizontal scroll (`overflow-x-auto`) for small screens
+- Action buttons in table: reduce size on mobile
+
+---
+
+### 5. My Ads & Favorites (`MyAds.tsx`, `Favorites.tsx`)
+
+#### [MODIFY] [MyAds.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/MyAds.tsx)
+#### [MODIFY] [Favorites.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/Favorites.tsx)
+
+**Changes:**
+- Reduce outer padding on mobile: `px-4 md:px-8`
+- Property grid already uses responsive classes — ensure consistent `gap` and `p`
+
+---
+
+### 6. Login & Register (`Login.tsx`, `Register.tsx`)
+
+#### [MODIFY] [Login.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/Login.tsx)
+#### [MODIFY] [Register.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/Register.tsx)
+
+**Changes:**
+- Full-height centered card already works — reduce horizontal padding on mobile
+- Font/spacing adjustments for very small screens
+
+---
+
+### 7. Membership & Payment (`Membership.tsx`, `Payment.tsx`)
+
+#### [MODIFY] [Membership.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/Membership.tsx)
+#### [MODIFY] [Payment.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/Payment.tsx)
+
+**Changes:**
+- Pricing card grid: stack to single column on mobile
+
+---
+
+### 8. Create Property (`CreateProperty.tsx`)
+
+#### [MODIFY] [CreateProperty.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/pages/CreateProperty.tsx)
+
+**Changes:**
+- Multi-step form: full-width on mobile, reduce side padding
+- Grid inputs: `grid-cols-1 sm:grid-cols-2`
+
+---
+
+### 9. ToolsModals (`ToolsModals.tsx`)
+
+#### [MODIFY] [ToolsModals.tsx](file:///c:/Users/adai/.gemini/antigravity/scratch/MAQC/frontend/src/components/ToolsModals.tsx)
+
+**Changes:**
+- Modal container: add `mx-4` margin on mobile so it doesn't touch screen edges
+- Mortgage calculator inputs: `grid-cols-1` on mobile
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- None (UI-only changes)
+
+### Manual Verification
+- Open app in Chrome DevTools > Toggle Device Toolbar
+- Test at: 375px (iPhone SE), 414px (iPhone XR), 768px (iPad), 1280px (desktop)
+- Navigate: Home → Property Detail → My Ads → Favorites → Admin → Membership
+- Test hamburger menu open/close on mobile
+
+> [!IMPORTANT]
+> The Admin Dashboard sidebar-to-tab-bar conversion is the most complex change. The sidebar will collapse to a horizontal scrollable tab strip on mobile.

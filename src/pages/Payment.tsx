@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { CreditCard, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 
 const GST_RATE = 0.05;
@@ -19,6 +20,7 @@ const parsePrice = (priceStr: string): number => {
 };
 
 const Payment: React.FC = () => {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const plan = searchParams.get('plan') || 'standard';
     const navigate = useNavigate();
@@ -45,6 +47,16 @@ const Payment: React.FC = () => {
         }
     };
 
+    const getPlanLabel = (planName: string): string => {
+        switch (planName.toLowerCase()) {
+            case 'free': return t('create_property.plan_free');
+            case 'basic': return t('create_property.plan_basic');
+            case 'plus': return t('create_property.plan_plus');
+            case 'pro': return t('create_property.plan_pro');
+            default: return planName;
+        }
+    };
+
     const priceDetails = useMemo(() => {
         const basePriceStr = getPlanPrice(plan);
         const basePrice = parsePrice(basePriceStr);
@@ -64,25 +76,19 @@ const Payment: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
-        // Simple formatting for card number
         if (name === 'cardNumber') {
             const formatted = value.replace(/\D/g, '').substring(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
             setFormData({ ...formData, [name]: formatted });
-        }
-        // Simple formatting for expiry
-        else if (name === 'expiry') {
+        } else if (name === 'expiry') {
             const formatted = value.replace(/\D/g, '').substring(0, 4);
             if (formatted.length > 2) {
                 setFormData({ ...formData, [name]: `${formatted.substring(0, 2)}/${formatted.substring(2, 4)}` });
             } else {
                 setFormData({ ...formData, [name]: formatted });
             }
-        }
-        // Simple formatting for CVC
-        else if (name === 'cvc') {
+        } else if (name === 'cvc') {
             setFormData({ ...formData, [name]: value.replace(/\D/g, '').substring(0, 4) });
-        }
-        else {
+        } else {
             setFormData({ ...formData, [name]: value });
         }
     };
@@ -93,12 +99,9 @@ const Payment: React.FC = () => {
         setIsProcessing(true);
 
         try {
-            // Validate user is logged in
             if (!user) {
                 throw new Error('Please log in to complete the purchase');
             }
-            //phrase 3
-            // Call backend payment endpoint
             await api.post('/payments/process', {
                 planType: plan,
                 cardholderName: formData.name,
@@ -130,8 +133,12 @@ const Payment: React.FC = () => {
                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle size={40} className="text-green-600" />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Payment Successful!</h2>
-                    <p className="text-slate-500 mb-8 text-lg">Your transaction has been completed. Redirecting to login...</p>
+                    <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">
+                        {t('payment.success.title')}
+                    </h2>
+                    <p className="text-slate-500 mb-8 text-lg">
+                        {t('payment.success.message')}
+                    </p>
                     <Loader2 className="animate-spin text-blue-600 mx-auto" size={24} />
                 </div>
             </div>
@@ -148,35 +155,49 @@ const Payment: React.FC = () => {
                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl opacity-20 -ml-20 -mb-20"></div>
 
                     <div className="relative z-10">
-                        <h2 className="text-2xl font-black mb-2">Order Summary</h2>
-                        <p className="text-slate-400 mb-8">Complete your purchase to activate your membership.</p>
+                        <h2 className="text-2xl font-black mb-2">
+                            {t('payment.summary.orderSummary')}
+                        </h2>
+                        <p className="text-slate-400 mb-8">
+                            {t('payment.subtitle')}
+                        </p>
 
                         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 mb-6">
                             <div className="flex justify-between items-center mb-4 pb-4 border-b border-white/10">
                                 <div>
-                                    <p className="text-sm text-slate-400 uppercase tracking-wider font-bold mb-1">Plan</p>
-                                    <p className="text-xl font-bold capitalize">{plan} Membership</p>
+                                    <p className="text-sm text-slate-400 uppercase tracking-wider font-bold mb-1">
+                                        {t('payment.summary.plan')}
+                                    </p>
+                                    <p className="text-xl font-bold capitalize">
+                                        {getPlanLabel(plan)}
+                                    </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm text-slate-400 uppercase tracking-wider font-bold mb-1">Price</p>
+                                    <p className="text-sm text-slate-400 uppercase tracking-wider font-bold mb-1">
+                                        {t('payment.summary.price')}
+                                    </p>
                                     <p className="text-xl font-bold">{formatCurrency(priceDetails.base)}</p>
                                 </div>
                             </div>
 
                             <div className="space-y-2 text-sm text-slate-300 mb-4 pb-4 border-b border-white/10">
                                 <div className="flex justify-between items-center">
-                                    <span>GST (5%)</span>
+                                    <span>{t('payment.summary.gst')}</span>
                                     <span>{formatCurrency(priceDetails.gst)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span>QST (9.975%)</span>
+                                    <span>{t('payment.summary.qst')}</span>
                                     <span>{formatCurrency(priceDetails.qst)}</span>
                                 </div>
                             </div>
 
                             <div className="flex justify-between items-center">
-                                <span className="text-lg font-bold">Total</span>
-                                <span className="text-3xl font-black text-white">{formatCurrency(priceDetails.total)}</span>
+                                <span className="text-lg font-bold">
+                                    {t('payment.summary.total')}
+                                </span>
+                                <span className="text-3xl font-black text-white">
+                                    {formatCurrency(priceDetails.total)}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -184,7 +205,7 @@ const Payment: React.FC = () => {
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 text-sm text-slate-400">
                             <ShieldCheck size={20} className="text-emerald-400" />
-                            <span>Secure 256-bit SSL encryption.</span>
+                            <span>{t('payment.summary.secure')}</span>
                         </div>
                     </div>
                 </div>
@@ -197,8 +218,10 @@ const Payment: React.FC = () => {
                         </div>
                     )}
                     <div className="mb-8">
-                        <h2 className="text-2xl font-black text-slate-900 mb-2">Payment Details</h2>
-                        <p className="text-slate-500">We accept Visa and Mastercard.</p>
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">
+                            {t('payment.title')}
+                        </h2>
+                        <p className="text-slate-500">{t('payment.subtitle')}</p>
                     </div>
 
                     <div className="flex gap-4 mb-8">
@@ -219,20 +242,24 @@ const Payment: React.FC = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Name on Card</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                                {t('payment.nameOnCard')}
+                            </label>
                             <input
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
                                 required
-                                placeholder="John Doe"
+                                placeholder={t('payment.placeholder.nameOnCard')}
                                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Card Number</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                                {t('payment.cardNumber')}
+                            </label>
                             <div className="relative">
                                 <input
                                     type="text"
@@ -240,7 +267,7 @@ const Payment: React.FC = () => {
                                     value={formData.cardNumber}
                                     onChange={handleInputChange}
                                     required
-                                    placeholder="0000 0000 0000 0000"
+                                    placeholder={t('payment.placeholder.cardNumber')}
                                     maxLength={19}
                                     className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium font-mono"
                                 />
@@ -250,27 +277,31 @@ const Payment: React.FC = () => {
 
                         <div className="grid grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Expiry Date</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    {t('payment.expiryDate')}
+                                </label>
                                 <input
                                     type="text"
                                     name="expiry"
                                     value={formData.expiry}
                                     onChange={handleInputChange}
                                     required
-                                    placeholder="MM/YY"
+                                    placeholder={t('payment.placeholder.expiryDate')}
                                     maxLength={5}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium font-mono"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">CVC</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    {t('payment.cvc')}
+                                </label>
                                 <input
                                     type="text"
                                     name="cvc"
                                     value={formData.cvc}
                                     onChange={handleInputChange}
                                     required
-                                    placeholder="123"
+                                    placeholder={t('payment.placeholder.cvc')}
                                     maxLength={4}
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium font-mono"
                                 />
@@ -286,17 +317,17 @@ const Payment: React.FC = () => {
                                 {isProcessing ? (
                                     <>
                                         <Loader2 className="animate-spin" size={24} />
-                                        Processing...
+                                        {t('payment.button.processing')}
                                     </>
                                 ) : (
-                                    `Pay ${formatCurrency(priceDetails.total)}`
+                                    t('payment.button.pay', { amount: formatCurrency(priceDetails.total) })
                                 )}
                             </button>
                         </div>
 
                         <div className="text-center mt-4">
                             <Link to="/membership" className="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
-                                Cancel and return to plans
+                                {t('payment.button.cancel')}
                             </Link>
                         </div>
                     </form>
@@ -307,4 +338,3 @@ const Payment: React.FC = () => {
 };
 
 export default Payment;
-
