@@ -56,6 +56,10 @@ const CreateProperty: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeReason, setUpgradeReason] = useState<'listings' | 'images' | null>(null);
+    const [sizeWarning, setSizeWarning] = useState<string | null>(null);
+
+    const MAX_TOTAL_SIZE_MB = 10;
+    const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024;
 
 
     useEffect(() => {
@@ -144,23 +148,52 @@ const CreateProperty: React.FC = () => {
         return limits ? limits.maxImages : 0;
     };
 
+    const getTotalFileSize = (files: File[]) => files.reduce((sum, f) => sum + f.size, 0);
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
             const maxImages = getImageLimit();
             const totalImages = selectedImages.length + files.length;
 
-            console.log("handleImageChange" + totalImages + ", " + maxImages)
+            // Check image count limit
             if (totalImages > maxImages) {
                 setUpgradeReason('images');
                 setShowUpgradeModal(true);
-                return
+                e.target.value = ''; // reset input
+                return;
             }
 
+            // Check total file size limit (10MB)
+            const currentSize = getTotalFileSize(selectedImages);
+            const newSize = getTotalFileSize(files);
+            const totalSize = currentSize + newSize;
+
+            if (totalSize > MAX_TOTAL_SIZE_BYTES) {
+                const currentMB = (currentSize / (1024 * 1024)).toFixed(1);
+                const newMB = (newSize / (1024 * 1024)).toFixed(1);
+                setSizeWarning(
+                    t('create_property.size_exceeded',
+                        `Total image size exceeds ${MAX_TOTAL_SIZE_MB}MB limit. Current: ${currentMB}MB + New: ${newMB}MB = ${(totalSize / (1024 * 1024)).toFixed(1)}MB`
+                    )
+                );
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => setSizeWarning(null), 5000);
+                e.target.value = ''; // reset input
+                return;
+            }
+
+            setSizeWarning(null);
             setSelectedImages(prev => [...prev, ...files]);
 
             const newPreviews = files.map(file => URL.createObjectURL(file));
             setImagePreviews(prev => [...prev, ...newPreviews]);
+            e.target.value = ''; // reset so same file can be re-selected
         }
     };
 
@@ -652,17 +685,45 @@ const CreateProperty: React.FC = () => {
                         </div>
                         <p className="text-sm text-slate-500 mb-4">{t('create_property.images_desc')} {getImageLimit()}</p>
 
-                        {/* Image limit indicator */}
-                        {/* {getCurrentPlanLimits() && (
-                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                <p className="text-sm text-blue-800">
-                                    <strong>{t('create_property.max_images', 'Maximum images')}:</strong> {getImageLimit()}
-                                    <span className="ml-2 text-blue-600">
-                                        ({selectedImages.length} / {getImageLimit()} {t('create_property.selected', 'selected')})
-                                    </span>
-                                </p>
+                        {/* Size warning toast */}
+                        {sizeWarning && (
+                            <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 animate-pulse">
+                                <AlertCircle size={20} className="text-amber-600 mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-amber-800">{t('create_property.size_warning_title', '⚠️ File size limit exceeded')}</p>
+                                    <p className="text-xs text-amber-700 mt-1">{sizeWarning}</p>
+                                </div>
+                                <button type="button" onClick={() => setSizeWarning(null)} className="text-amber-400 hover:text-amber-600">
+                                    <X size={16} />
+                                </button>
                             </div>
-                        )} */}
+                        )}
+
+                        {/* Size progress indicator */}
+                        {selectedImages.length > 0 && (
+                            <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                        {selectedImages.length} / {getImageLimit()} {t('create_property.selected', 'images')}
+                                    </span>
+                                    <span className={`text-xs font-bold uppercase tracking-widest ${
+                                        getTotalFileSize(selectedImages) > MAX_TOTAL_SIZE_BYTES * 0.8 ? 'text-amber-600' : 'text-slate-500'
+                                    }`}>
+                                        {formatFileSize(getTotalFileSize(selectedImages))} / {MAX_TOTAL_SIZE_MB}MB
+                                    </span>
+                                </div>
+                                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-300 ${
+                                            getTotalFileSize(selectedImages) > MAX_TOTAL_SIZE_BYTES * 0.8
+                                                ? 'bg-amber-500'
+                                                : 'bg-blue-500'
+                                        }`}
+                                        style={{ width: `${Math.min(100, (getTotalFileSize(selectedImages) / MAX_TOTAL_SIZE_BYTES) * 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="space-y-4">
                             <div
@@ -671,6 +732,7 @@ const CreateProperty: React.FC = () => {
                             >
                                 <Upload size={32} className="mb-3 text-slate-400" />
                                 <span className="text-sm font-medium">{t('create_property.click_to_upload')}</span>
+                                <span className="text-xs text-slate-400 mt-1">{t('create_property.max_total_size', `Max total: ${MAX_TOTAL_SIZE_MB}MB`)}</span>
                                 <input
                                     id="file-upload"
                                     type="file"
@@ -690,6 +752,9 @@ const CreateProperty: React.FC = () => {
                                                 alt={`Preview ${index}`}
                                                 className="w-full h-full object-cover"
                                             />
+                                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold px-2 py-0.5 text-center">
+                                                {formatFileSize(selectedImages[index]?.size || 0)}
+                                            </div>
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(index)}

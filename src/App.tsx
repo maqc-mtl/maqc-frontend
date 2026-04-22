@@ -24,6 +24,11 @@ import SellerDisclosure from './pages/SellerDisclosure';
 import MyAds from './pages/MyAds';
 import ResetPassword from './pages/ResetPassword';
 import ScrollToTop from './components/ScrollToTop';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const stripePromise = loadStripe('pk_test_51TOgiRLoPWXtoOPeOkFBeyDNaBmTbZvypTqCgdDh203EzgaMc4cY89b3GjuuDS5BTa8gmwpRRJh7kgwYwXEB6nLG00KthWA81n'); // Replace with your actual public key
 
 // import Payment from './pages/Payment';
 
@@ -255,13 +260,11 @@ const Header: React.FC = () => {
                                                                     <Heart size={18} className="text-slate-400" />
                                                                     {t('nav.my_favorites', 'My Favorites')}
                                                                 </Link>
-                                                                <Link to="/my-ads1" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                                                                    {/* phrase3 <Link to="/my-ads" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"> */}
+                                                                <Link to="/my-ads" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                                                     <FileText size={18} className="text-slate-400" />
                                                                     {t('nav.my_ads')}
                                                                 </Link>
-                                                                <Link to="/membership1" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                                                                    {/* phrase3 <Link to="/membership" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"> */}
+                                                                <Link to="/membership" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                                                     <Crown size={18} className="text-slate-400" />
                                                                     {t('nav.subscriptions')}
                                                                 </Link>
@@ -463,22 +466,28 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/properties/:id" element={<PropertyDetail />} />
-                        <Route path="/properties/:id/purchase-offer" element={<PurchaseOffer />} />
-                        <Route path="/properties/purchase-offer" element={<PurchaseOffer />} />
-                        <Route path="/properties/:id/seller-disclosure" element={<SellerDisclosure />} />
-                        <Route path="/properties/seller-disclosure" element={<SellerDisclosure />} />
-                        <Route path="/membership" element={<Membership />} />
-                        <Route path="/payment" element={<Payment />} />
-                        <Route path="/create-property" element={<CreateProperty />} />
-                        <Route path="/favorites" element={<Favorites />} />
-                        <Route path="/my-ads" element={<MyAds />} />
-                        <Route path="/admin" element={<AdminDashboard />} />
-                        <Route path="/terms" element={<TermsPage />} />
-                        <Route path="/privacy" element={<PrivacyPage />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/terms" element={<TermsPage />} />
                         <Route path="/privacy" element={<PrivacyPage />} />
+
+                        {/* Private Routes */}
+                        <Route path="/properties/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
+                        <Route path="/properties/:id/purchase-offer" element={<ProtectedRoute><PurchaseOffer /></ProtectedRoute>} />
+                        <Route path="/properties/purchase-offer" element={<ProtectedRoute><PurchaseOffer /></ProtectedRoute>} />
+                        <Route path="/properties/:id/seller-disclosure" element={<ProtectedRoute><SellerDisclosure /></ProtectedRoute>} />
+                        <Route path="/properties/seller-disclosure" element={<ProtectedRoute><SellerDisclosure /></ProtectedRoute>} />
+                        <Route path="/membership" element={<ProtectedRoute><Membership /></ProtectedRoute>} />
+                        <Route path="/payment" element={
+                            <ProtectedRoute>
+                                <Elements stripe={stripePromise}>
+                                    <Payment />
+                                </Elements>
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/create-property" element={<ProtectedRoute><CreateProperty /></ProtectedRoute>} />
+                        <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+                        <Route path="/my-ads" element={<ProtectedRoute><MyAds /></ProtectedRoute>} />
+                        <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
                     </Routes>
                 </main>
 

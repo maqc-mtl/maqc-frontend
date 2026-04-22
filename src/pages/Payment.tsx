@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { CreditCard, ShieldCheck, Loader2, CheckCircle } from 'lucide-react';
+import { CreditCard, ShieldCheck, Loader2, CheckCircle, Calendar, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js';
 import api from '../services/api';
 
 const GST_RATE = 0.05;
@@ -25,17 +26,54 @@ const Payment: React.FC = () => {
     const plan = searchParams.get('plan') || 'standard';
     const navigate = useNavigate();
     const { user, updatePlanType } = useAuth();
+    const stripe = useStripe();
+    const elements = useElements();
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isConfirmingServer, setIsConfirmingServer] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [clientSecret, setClientSecret] = useState<string | null>(null);
+    const [transactionId, setTransactionId] = useState<number | null>(null);
+
+    const pollingTimeoutRef = useRef<any>(null);
 
     const [formData, setFormData] = useState({
-        name: '',
-        cardNumber: '',
-        expiry: '',
-        cvc: ''
+        name: ''
     });
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (pollingTimeoutRef.current) {
+                clearTimeout(pollingTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const hasInitialized = useRef(false);
+
+    // Fetch PaymentIntent clientSecret on mount
+    useEffect(() => {
+        if (!user || hasInitialized.current) return;
+
+        const createIntent = async () => {
+            hasInitialized.current = true;
+            try {
+                const response = await api.post('/payments/create-payment-intent', {
+                    planType: plan,
+                    email: user.email
+                });
+                setClientSecret(response.data.clientSecret);
+                setTransactionId(response.data.transactionId);
+            } catch (err: any) {
+                console.error('Failed to create payment intent:', err);
+                setError('Failed to initialize payment. Please refresh.');
+                hasInitialized.current = false; // Allow retry on error if needed
+            }
+        };
+        createIntent();
+    }, [plan, user]);
 
     const getPlanPrice = (planName: string): string => {
         switch (planName.toLowerCase()) {
@@ -75,26 +113,41 @@ const Payment: React.FC = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
 
-        if (name === 'cardNumber') {
-            const formatted = value.replace(/\D/g, '').substring(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
-            setFormData({ ...formData, [name]: formatted });
-        } else if (name === 'expiry') {
-            const formatted = value.replace(/\D/g, '').substring(0, 4);
-            if (formatted.length > 2) {
-                setFormData({ ...formData, [name]: `${formatted.substring(0, 2)}/${formatted.substring(2, 4)}` });
+    const pollTransactionStatus = async (id: number) => {
+        try {
+            const response = await api.get(`/payments/transaction/${id}/status`);
+            const status = response.data.status;
+
+            if (status === 'SUCCESS') {
+                setIsConfirmingServer(false);
+                setIsSuccess(true);
+                updatePlanType(plan);
+                setTimeout(() => {
+                    navigate('/');
+                }, 3000);
+            } else if (status === 'FAILED') {
+                setIsConfirmingServer(false);
+                setError('Server failed to confirm payment. Please contact support.');
             } else {
-                setFormData({ ...formData, [name]: formatted });
+                // Keep polling if still PENDING
+                pollingTimeoutRef.current = setTimeout(() => pollTransactionStatus(id), 2000);
             }
-        } else if (name === 'cvc') {
-            setFormData({ ...formData, [name]: value.replace(/\D/g, '').substring(0, 4) });
-        } else {
-            setFormData({ ...formData, [name]: value });
+        } catch (err) {
+            console.error('Polling error:', err);
+            // Retry polling after error
+            pollingTimeoutRef.current = setTimeout(() => pollTransactionStatus(id), 3000);
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!stripe || !elements || !clientSecret || !transactionId) {
+            return;
+        }
+
         setError(null);
         setIsProcessing(true);
 
@@ -102,28 +155,54 @@ const Payment: React.FC = () => {
             if (!user) {
                 throw new Error('Please log in to complete the purchase');
             }
-            await api.post('/payments/process', {
-                planType: plan,
-                cardholderName: formData.name,
-                cardNumber: formData.cardNumber,
-                expiry: formData.expiry,
-                cvc: formData.cvc,
-                email: user.email
+
+            const cardNumberElement = elements.getElement(CardNumberElement);
+            if (!cardNumberElement) throw new Error('Card element not found');
+
+            const result = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: cardNumberElement,
+                    billing_details: {
+                        name: formData.name,
+                        email: user.email,
+                    },
+                },
             });
 
-            setIsProcessing(false);
-            setIsSuccess(true);
+            if (result.error) {
+                throw new Error(result.error.message);
+            }
 
-            updatePlanType(plan);
-
-            setTimeout(() => {
-                navigate('/');
-            }, 3000);
+            if (result.paymentIntent?.status === 'succeeded') {
+                setIsProcessing(false);
+                setIsConfirmingServer(true);
+                // Start polling the backend for webhook result
+                pollTransactionStatus(transactionId);
+            }
 
         } catch (err: any) {
             setIsProcessing(false);
-            setError(err.response?.data?.message || 'Payment failed. Please try again.');
+            setError(err.message || 'Payment failed. Please try again.');
         }
+    };
+
+    // Premium styling for Stripe elements
+    const elementOptions = {
+        style: {
+            base: {
+                fontSize: '16px',
+                color: '#0f172a', // slate-900
+                fontFamily: 'Inter, system-ui, sans-serif',
+                fontSmoothing: 'antialiased',
+                '::placeholder': {
+                    color: '#94a3b8', // slate-400
+                },
+            },
+            invalid: {
+                color: '#ef4444', // red-500
+                iconColor: '#ef4444',
+            },
+        },
     };
 
     if (isSuccess) {
@@ -218,31 +297,31 @@ const Payment: React.FC = () => {
                         </div>
                     )}
                     <div className="mb-8">
-                        <h2 className="text-2xl font-black text-slate-900 mb-2">
-                            {t('payment.title')}
-                        </h2>
+                        <div className="flex justify-between items-start mb-2">
+                            <h2 className="text-2xl font-black text-slate-900">
+                                {t('payment.title')}
+                            </h2>
+                            <div className="flex gap-2">
+                                <div className="h-6 w-10 flex items-center justify-center">
+                                    <svg viewBox="0 0 50 16" className="h-full w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21.841 1.054L20.48 10.82h3.297l1.36-9.766h-3.296zM33.623 1.054l-3.328 6.745-.352-1.688c-.602-2.11-2.484-4.22-4.633-5.057l.984 9.766h3.469l5.18-9.766h-1.32zm-18.43 0h-2.546c-.61 0-1.125.352-1.36 1.055L6.46 10.82h3.469l.688-1.933h4.226l.407 1.933h3.047l-2.672-9.766h-2.21zm-1.875 5.45l1.055-3.024.601 3.024h-1.656zM48.172 1.054h-3.18c-.547 0-.96.282-1.203.774l-4.57 6.54-1.36-7.314h-3.36l2.07 9.766h3.282l4.89-6.96v6.96h3.188v-9.766h-.243z" fill="#1434CB" />
+                                    </svg>
+                                </div>
+                                <div className="h-6 w-10 flex items-center justify-center">
+                                    <svg viewBox="0 0 36 22" className="h-full w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22.5 11c0-3.375-1.5-6.375-3.875-8.375-2.375 2-3.875 5-3.875 8.375s1.5 6.375 3.875 8.375C21 17.375 22.5 14.375 22.5 11z" fill="#FF5F00" />
+                                        <path d="M14.75 11c0 3.375 1.5 6.375 3.875 8.375 3.25-1.125 5.625-4.25 5.625-8.375s-2.375-7.25-5.625-8.375C16.25 4.625 14.75 7.625 14.75 11z" fill="#EB001B" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
                         <p className="text-slate-500">{t('payment.subtitle')}</p>
                     </div>
 
-                    <div className="flex gap-4 mb-8">
-                        <div className="h-12 w-20 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center p-2">
-                            <svg viewBox="0 0 50 16" className="h-full w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M21.841 1.054L20.48 10.82h3.297l1.36-9.766h-3.296zM33.623 1.054l-3.328 6.745-.352-1.688c-.602-2.11-2.484-4.22-4.633-5.057l.984 9.766h3.469l5.18-9.766h-1.32zm-18.43 0h-2.546c-.61 0-1.125.352-1.36 1.055L6.46 10.82h3.469l.688-1.933h4.226l.407 1.933h3.047l-2.672-9.766h-2.21zm-1.875 5.45l1.055-3.024.601 3.024h-1.656zM48.172 1.054h-3.18c-.547 0-.96.282-1.203.774l-4.57 6.54-1.36-7.314h-3.36l2.07 9.766h3.282l4.89-6.96v6.96h3.188v-9.766h-.243z" fill="#1434CB" />
-                            </svg>
-                        </div>
-                        <div className="h-12 w-20 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center p-2">
-                            <svg viewBox="0 0 36 22" className="h-full w-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M22.5 11c0-3.375-1.5-6.375-3.875-8.375-2.375 2-3.875 5-3.875 8.375s1.5 6.375 3.875 8.375C21 17.375 22.5 14.375 22.5 11z" fill="#FF5F00" />
-                                <path d="M14.75 11c0 3.375 1.5 6.375 3.875 8.375 3.25-1.125 5.625-4.25 5.625-8.375s-2.375-7.25-5.625-8.375C16.25 4.625 14.75 7.625 14.75 11z" fill="#EB001B" />
-                                <path d="M24.25 11c0 4.125-2.375 7.25-5.625 8.375C21.875 21.5 25.75 23 30 23c6.625 0 12-5.375 12-12s-5.375-12-12-12c-4.25 0-8.125 1.5-11.375 3.625C21.875 3.75 24.25 6.875 24.25 11z" fill="#F79E1B" />
-                                <path d="M11.75 11c0-4.125 2.375-7.25 5.625-8.375C14.125.5 10.25-1 6-1-1.625-1-7 4.375-7 11s5.375 12 13 12c4.25 0 8.125-1.5 11.375-3.625C14.125 18.25 11.75 15.125 11.75 11z" fill="#EB001B" />
-                            </svg>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                            <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">
+                                <CreditCard size={14} className="text-slate-400" />
                                 {t('payment.nameOnCard')}
                             </label>
                             <input
@@ -257,64 +336,43 @@ const Payment: React.FC = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                            <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">
+                                <CreditCard size={14} className="text-slate-400" />
                                 {t('payment.cardNumber')}
                             </label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    name="cardNumber"
-                                    value={formData.cardNumber}
-                                    onChange={handleInputChange}
-                                    required
-                                    placeholder={t('payment.placeholder.cardNumber')}
-                                    maxLength={19}
-                                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium font-mono"
-                                />
-                                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                            <div className="w-full px-4 py-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-all">
+                                <CardNumberElement options={elementOptions} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">
+                                    <Calendar size={14} className="text-slate-400" />
                                     {t('payment.expiryDate')}
                                 </label>
-                                <input
-                                    type="text"
-                                    name="expiry"
-                                    value={formData.expiry}
-                                    onChange={handleInputChange}
-                                    required
-                                    placeholder={t('payment.placeholder.expiryDate')}
-                                    maxLength={5}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium font-mono"
-                                />
+                                <div className="w-full px-4 py-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-all">
+                                    <CardExpiryElement options={elementOptions} />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">
+                                    <Lock size={14} className="text-slate-400" />
                                     {t('payment.cvc')}
                                 </label>
-                                <input
-                                    type="text"
-                                    name="cvc"
-                                    value={formData.cvc}
-                                    onChange={handleInputChange}
-                                    required
-                                    placeholder={t('payment.placeholder.cvc')}
-                                    maxLength={4}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition-all font-medium font-mono"
-                                />
+                                <div className="w-full px-4 py-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-all">
+                                    <CardCvcElement options={elementOptions} />
+                                </div>
                             </div>
                         </div>
 
                         <div className="pt-4">
                             <button
                                 type="submit"
-                                disabled={isProcessing}
+                                disabled={isProcessing || isConfirmingServer || !stripe || !clientSecret}
                                 className="w-full bg-blue-600 text-white font-black text-lg py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {isProcessing ? (
+                                {isProcessing || isConfirmingServer ? (
                                     <>
                                         <Loader2 className="animate-spin" size={24} />
                                         {t('payment.button.processing')}
@@ -325,7 +383,7 @@ const Payment: React.FC = () => {
                             </button>
                         </div>
 
-                        <div className="text-center mt-4">
+                        <div className="text-center">
                             <Link to="/membership" className="text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
                                 {t('payment.button.cancel')}
                             </Link>

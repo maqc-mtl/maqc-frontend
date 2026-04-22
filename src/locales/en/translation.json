@@ -170,6 +170,18 @@
         "views": "Views",
         "move_in_date": "Move-in Date"
     },
+    "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "refused": "Refused",
+        "expired": "Expired"
+    },
+    "my_ads": {
+        "title": "My Ads",
+        "count": "properties",
+        "empty_title": "No Ads Yet",
+        "empty_message": "You have not published any properties yet."
+    },
     "favorites": {
         "title": "My Favorites",
         "count": "properties",
@@ -178,6 +190,9 @@
     },
     "common": {
         "loading": "Loading...",
+        "save_changes": "Save Changes",
+        "edit": "Edit",
+        "locked": "Locked",
         "no_matches": "No Matches Found",
         "to_sale": "for sale",
         "summary": "Summary",
@@ -450,6 +465,7 @@
     },
     "create_property": {
         "title": "Create an ad",
+        "edit_property": "Edit Property",
         "basic_info": "Basic Information",
         "ad_title": "Title *",
         "ad_title_placeholder": "Ex: Beautiful house in the city center",
@@ -532,7 +548,7 @@
             "cvc": "123"
         },
         "button": {
-            "processing": "Processing...",
+            "processing": "Payment in progress...",
             "pay": "Pay {{amount}}",
             "cancel": "Cancel and return to plans"
         },

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText } from 'lucide-react';
+import { FileText, Edit2 } from 'lucide-react';
 import api from '../services/api';
 import PropertyCard from '../components/PropertyCard';
+import PropertyEditModal from '../components/PropertyEditModal';
 import { useAuth } from '../context/AuthContext';
 
 const MyAds: React.FC = () => {
@@ -13,6 +14,10 @@ const MyAds: React.FC = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalProperties, setTotalProperties] = useState(0);
+
+    // Edit Modal states
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [currentProperty, setCurrentProperty] = useState<any | null>(null);
 
     const fetchProperties = useCallback(async (isNextPage = false) => {
         if (!user || (!user as any).id) return;
@@ -41,6 +46,20 @@ const MyAds: React.FC = () => {
             setLoading(false);
         }
     }, [page, user]);
+
+    const handleEdit = (property: any) => {
+        setCurrentProperty(property);
+        setShowEditModal(true);
+    };
+
+    const handleSaveProperty = async (editedProperty: any) => {
+        try {
+            await api.put(`/properties/${editedProperty.id}`, editedProperty);
+            fetchProperties();
+        } catch (error) {
+            console.error('Failed to update property', error);
+        }
+    };
 
     useEffect(() => {
         fetchProperties();
@@ -98,8 +117,39 @@ const MyAds: React.FC = () => {
                         {/* Properties Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {properties.map((property) => (
-                                <div key={property.id}>
-                                    <PropertyCard property={property} />
+                                <div key={property.id} className="flex flex-col gap-3">
+                                    <div className="relative">
+                                        <PropertyCard property={property} />
+                                        
+                                        {/* Status Badge */}
+                                        <div className="absolute top-4 left-4 z-10">
+                                            <span className={`inline-flex items-center px-3 py-1 text-[10px] font-black rounded-full shadow-lg backdrop-blur-md ${
+                                                property.status === 'APPROVED' ? 'bg-emerald-500/90 text-white' :
+                                                property.status === 'REFUSED' ? 'bg-rose-500/90 text-white' :
+                                                property.status === 'EXPIRED' ? 'bg-slate-500/90 text-white' :
+                                                'bg-amber-500/90 text-white'
+                                            }`}>
+                                                {String(t(`status.${property.status.toLowerCase()}`, property.status))}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex gap-2">
+                                        {(property.status === 'PENDING' || property.status === 'REFUSED') ? (
+                                            <button
+                                                onClick={() => handleEdit(property)}
+                                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all group"
+                                            >
+                                                <Edit2 size={14} className="group-hover:text-blue-500 transition-colors" />
+                                                {t('common.edit', 'Edit')}
+                                            </button>
+                                        ) : (
+                                            <div className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 cursor-not-allowed">
+                                                {t('common.locked', 'Locked')}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -118,6 +168,13 @@ const MyAds: React.FC = () => {
                     </>
                 )}
             </div>
+
+            <PropertyEditModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                onSave={handleSaveProperty}
+                property={currentProperty}
+            />
         </div>
     );
 };

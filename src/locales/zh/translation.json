@@ -166,9 +166,20 @@
         "found": "个房源",
         "no_results": "未找到符合条件的房产",
         "no_results_desc": "请尝试调整您的搜索过滤器，或稍后查看新房源。",
-        "published": "发布于",
         "views": "浏览",
         "move_in_date": "入住日期"
+    },
+    "status": {
+        "pending": "审核中",
+        "approved": "已通过",
+        "refused": "审核未通过",
+        "expired": "已过期"
+    },
+    "my_ads": {
+        "title": "我的房源",
+        "count": "个房源",
+        "empty_title": "暂无房源",
+        "empty_message": "您尚未发布任何房源。"
     },
     "favorites": {
         "title": "我的收藏",
@@ -178,6 +189,9 @@
     },
     "common": {
         "loading": "加载中...",
+        "save_changes": "保存更改",
+        "edit": "编辑",
+        "locked": "已锁定",
         "no_matches": "未找到匹配项",
         "to_sale": "待售",
         "summary": "摘要",
@@ -446,6 +460,7 @@
     },
     "create_property": {
         "title": "发布房源",
+        "edit_property": "编辑房源",
         "basic_info": "基本信息",
         "ad_title": "标题 *",
         "ad_title_placeholder": "例如：市中心美丽别墅",
@@ -532,7 +547,7 @@
             "cvc": "123"
         },
         "button": {
-            "processing": "处理中...",
+            "processing": "支付进行中...",
             "pay": "支付 {{amount}}",
             "cancel": "取消并返回计划"
         },

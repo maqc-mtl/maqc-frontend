@@ -170,6 +170,18 @@
         "views": "Vues",
         "move_in_date": "Date d'emménagement"
     },
+    "status": {
+        "pending": "En attente",
+        "approved": "Approuvé",
+        "refused": "Refusé",
+        "expired": "Expiré"
+    },
+    "my_ads": {
+        "title": "Mes annonces",
+        "count": "propriétés",
+        "empty_title": "Aucune annonce",
+        "empty_message": "Vous n'avez pas encore publié de propriétés."
+    },
     "favorites": {
         "title": "Mes Favoris",
         "count": "propriétés",
@@ -178,6 +190,9 @@
     },
     "common": {
         "loading": "Chargement...",
+        "save_changes": "Enregistrer les modifications",
+        "edit": "Modifier",
+        "locked": "Verrouillé",
         "no_matches": "Aucun résultat trouvé",
         "to_sale": "à vendre",
         "summary": "Sommaire",
@@ -446,6 +461,7 @@
     },
     "create_property": {
         "title": "Créer une annonce",
+        "edit_property": "Modifier l'annonce",
         "basic_info": "Informations de base",
         "ad_title": "Titre *",
         "ad_title_placeholder": "Ex: Belle maison au centre-ville",
@@ -530,7 +546,7 @@
             "cvc": "123"
         },
         "button": {
-            "processing": "Traitement en cours...",
+            "processing": "Paiement en cours...",
             "pay": "Payer {{amount}}",
             "cancel": "Annuler et retourner aux plans"
         },

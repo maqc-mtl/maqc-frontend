@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Phone, Mail, MapPin, Star, ShieldCheck, UserCheck, Award, Users } from 'lucide-react';
+import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Star, ShieldCheck, UserCheck, Award, Users, Globe } from 'lucide-react';
 // import { useTranslation } from 'react-i18next';
 import api, { propertyApi } from '../services/api';
+import PropertyEditModal from '../components/PropertyEditModal';
 
 type Tab = 'properties' | 'users' | 'notaries' | 'inspectors' | 'agents';
 
@@ -38,6 +39,14 @@ const AdminDashboard: React.FC = () => {
     // Modal states for CRUD
     const [showModal, setShowModal] = useState(false);
     const [currentEntity, setCurrentEntity] = useState<Professional | null>(null);
+
+    // Confirmation Modal
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{ type: 'approve' | 'refuse', id: number } | null>(null);
+
+    // Property Edit Modal
+    const [showPropertyEditModal, setShowPropertyEditModal] = useState(false);
+    const [currentPropertyForEdit, setCurrentPropertyForEdit] = useState<any | null>(null);
 
     // Scoring modal states
     const [showScoreModal, setShowScoreModal] = useState(false);
@@ -85,22 +94,44 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handleApprove = async (id: number) => {
+    const executeConfirmAction = async () => {
+        if (!confirmAction) return;
         try {
-            await api.post(`/admin/properties/${id}/approve`);
+            await api.post(`/admin/properties/${confirmAction.id}/${confirmAction.type}`);
+            setShowConfirmModal(false);
+            setConfirmAction(null);
             fetchData();
         } catch (err) { console.error(err); }
     };
 
-    const handleRefuse = async (id: number) => {
+    const handleApprove = (id: number) => {
+        setConfirmAction({ type: 'approve', id });
+        setShowConfirmModal(true);
+    };
+
+    const handleRefuse = (id: number) => {
+        setConfirmAction({ type: 'refuse', id });
+        setShowConfirmModal(true);
+    };
+
+    const handleStatusChange = async (propertyId: number, newStatus: string) => {
         try {
-            await api.post(`/admin/properties/${id}/refuse`);
+            await api.put(`/admin/properties/${propertyId}/status`, null, { params: { status: newStatus } });
+            fetchData();
+        } catch (err) { console.error(err); }
+    };
+
+    const handleSavePropertyEdit = async (editedProperty: any) => {
+        try {
+            await api.put(`/properties/${editedProperty.id}`, editedProperty);
+            setShowPropertyEditModal(false);
+            setCurrentPropertyForEdit(null);
             fetchData();
         } catch (err) { console.error(err); }
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm('Are you sure you want to delete this?')) return;
+        if (!window.confirm('您确定要删除此项吗？')) return;
         try {
             await api.delete(`/admin/${activeTab}/${id}`);
             fetchData();
@@ -153,11 +184,11 @@ const AdminDashboard: React.FC = () => {
     };
 
     const tabConfig = [
-        { id: 'properties', label: 'Properties', icon: <Home size={18} /> },
-        { id: 'users', label: 'Users', icon: <Users size={18} /> },
-        { id: 'notaries', label: 'Notaries', icon: <ShieldCheck size={18} /> },
-        { id: 'inspectors', label: 'Inspectors', icon: <Search size={18} /> },
-        { id: 'agents', label: 'Agents', icon: <UserCheck size={18} /> },
+        { id: 'properties', label: '房源', icon: <Home size={18} /> },
+        { id: 'users', label: '用户', icon: <Users size={18} /> },
+        { id: 'notaries', label: '公证员', icon: <ShieldCheck size={18} /> },
+        { id: 'inspectors', label: '房屋检查员', icon: <Search size={18} /> },
+        { id: 'agents', label: '经纪人', icon: <UserCheck size={18} /> },
     ];
 
     return (
@@ -168,7 +199,7 @@ const AdminDashboard: React.FC = () => {
                     <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
                         <LayoutDashboard size={20} />
                     </div>
-                    <span className="font-black tracking-tight text-xl">ADMIN PANEL</span>
+                    <span className="font-black tracking-tight text-xl">后台管理面板</span>
                 </div>
                 <nav className="space-y-2">
                     {tabConfig.map((tab) => (
@@ -210,17 +241,17 @@ const AdminDashboard: React.FC = () => {
             <div className="flex-1 p-4 md:p-10 overflow-y-auto">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 md:mb-10">
                     <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight uppercase">
-                        {activeTab} Management
+                        {activeTab === 'properties' ? '房源' : activeTab === 'users' ? '用户' : activeTab === 'notaries' ? '公证员' : activeTab === 'inspectors' ? '房屋检查员' : '经纪人'} 管理
                     </h1>
                     {activeTab !== 'properties' && activeTab !== 'users' && (
                         <button
                             onClick={() => {
-                                setCurrentEntity({ name: '', address: '', phone: '', email: '', languages: ['EN', 'FR'], rating: 5 });
+                                setCurrentEntity({ name: '', address: '', phone: '', email: '', languages: [], rating: 5 });
                                 setShowModal(true);
                             }}
                             className="bg-blue-600 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 self-start"
                         >
-                            <Plus size={16} /> Add New {activeTab.slice(0, -1)}
+                            <Plus size={16} /> 添加新{activeTab === 'notaries' ? '公证员' : activeTab === 'inspectors' ? '房屋检查员' : '经纪人'}
                         </button>
                     )}
                 </div>
@@ -241,17 +272,17 @@ const AdminDashboard: React.FC = () => {
                                 {/* Filters Row */}
                                 <div className="flex justify-start">
                                     <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100 min-w-[240px]">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Filter Status:</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">筛选状态:</span>
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => setStatusFilter(e.target.value)}
                                             className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest text-slate-900 cursor-pointer w-full"
                                         >
-                                            <option value="">All Statuses</option>
-                                            <option value="PENDING">Pending Approval</option>
-                                            <option value="APPROVED">Approved</option>
-                                            <option value="EXPIRED">Expired </option>
-                                            <option value="REFUSED">Refused</option>
+                                            <option value="">全部状态</option>
+                                            <option value="PENDING">审核中</option>
+                                            <option value="APPROVED">已通过</option>
+                                            <option value="EXPIRED">已过期</option>
+                                            <option value="REFUSED">审核未通过</option>
                                         </select>
                                     </div>
                                 </div>
@@ -261,10 +292,10 @@ const AdminDashboard: React.FC = () => {
                                         <table className="w-full text-left min-w-[600px]">
                                             <thead className="bg-slate-50 border-b border-slate-100">
                                                 <tr>
-                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property</th>
-                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">房源</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">类型</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">状态</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">操作</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
@@ -285,23 +316,32 @@ const AdminDashboard: React.FC = () => {
                                                             <span className="px-3 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-full uppercase tracking-widest">{p.type}</span>
                                                         </td>
                                                         <td className="px-8 py-6">
-                                                            <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest ${p.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600' : p.status === 'REFUSED' ? 'bg-rose-50 text-rose-600' : p.status === 'EXPIRED' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600'
-                                                                }`}>
-                                                                {p.status}
-                                                            </span>
+                                                            <select
+                                                                value={p.status}
+                                                                onChange={(e) => handleStatusChange(p.id, e.target.value)}
+                                                                className={`px-3 py-1 outline-none text-[10px] font-black rounded-full uppercase tracking-widest cursor-pointer ${p.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600' : p.status === 'REFUSED' ? 'bg-rose-50 text-rose-600' : p.status === 'EXPIRED' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600'}`}
+                                                            >
+                                                                <option value="PENDING">审核中</option>
+                                                                <option value="APPROVED">已通过</option>
+                                                                <option value="REFUSED">审核未通过</option>
+                                                                <option value="EXPIRED">已过期</option>
+                                                            </select>
                                                         </td>
                                                         <td className="px-4 md:px-8 py-4 md:py-6 text-right space-x-1 md:space-x-2">
                                                             {p.status === 'PENDING' && (
                                                                 <>
-                                                                    <button onClick={() => handleApprove(p.id)} className="p-2 md:p-3 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Approve">
+                                                                    <button onClick={() => handleApprove(p.id)} className="p-2 md:p-3 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="批准">
                                                                         <CheckCircle size={18} />
                                                                     </button>
-                                                                    <button onClick={() => handleRefuse(p.id)} className="p-2 md:p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Refuse">
+                                                                    <button onClick={() => handleRefuse(p.id)} className="p-2 md:p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="拒绝">
                                                                         <XCircle size={18} />
                                                                     </button>
                                                                 </>
                                                             )}
-                                                            <button onClick={() => handleOpenScoreModal(p)} className="p-2 md:p-3 text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="Score Property">
+                                                            <button onClick={() => { setCurrentPropertyForEdit(p); setShowPropertyEditModal(true); }} className="p-2 md:p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="编辑">
+                                                                <Edit2 size={18} />
+                                                            </button>
+                                                            <button onClick={() => handleOpenScoreModal(p)} className="p-2 md:p-3 text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="房源评分">
                                                                 <Award size={18} />
                                                             </button>
                                                         </td>
@@ -310,13 +350,13 @@ const AdminDashboard: React.FC = () => {
                                             </tbody>
                                         </table>
                                     </div>
-                                    {properties.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">No properties found.</div>}
+                                    {properties.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">未找到房源。</div>}
 
                                     {/* Pagination UI */}
                                     {totalPages > 1 && (
                                         <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                                             <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                                Page {currentPage + 1} of {totalPages}
+                                                第 {currentPage + 1} 页，共 {totalPages} 页
                                             </div>
                                             <div className="flex gap-2">
                                                 <button
@@ -324,14 +364,14 @@ const AdminDashboard: React.FC = () => {
                                                     onClick={() => setCurrentPage(prev => prev - 1)}
                                                     className="px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                                 >
-                                                    Previous
+                                                    上一页
                                                 </button>
                                                 <button
                                                     disabled={currentPage >= totalPages - 1}
                                                     onClick={() => setCurrentPage(prev => prev + 1)}
                                                     className="px-6 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                                 >
-                                                    Next
+                                                    下一页
                                                 </button>
                                             </div>
                                         </div>
@@ -344,10 +384,10 @@ const AdminDashboard: React.FC = () => {
                                     <table className="w-full text-left min-w-[500px]">
                                         <thead className="bg-slate-50 border-b border-slate-100">
                                             <tr>
-                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">User ID</th>
-                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</th>
-                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status / Role</th>
-                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">用户ID</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">邮箱</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">状态 / 角色</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">操作</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50">
@@ -366,12 +406,12 @@ const AdminDashboard: React.FC = () => {
                                                     </td>
                                                     <td className="px-8 py-6">
                                                         <div className="flex gap-2">
-                                                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-full uppercase tracking-widest">Active</span>
-                                                            {u.role && <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-black rounded-full uppercase tracking-widest">{u.role}</span>}
+                                                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-full uppercase tracking-widest">活跃</span>
+                                                            {u.role && <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-black rounded-full uppercase tracking-widest">{u.role === 'ADMIN' ? '管理员' : u.role === 'USER' ? '普通用户' : u.role}</span>}
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-6 text-right">
-                                                        <button onClick={() => handleDelete(u.id)} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Delete User">
+                                                        <button onClick={() => handleDelete(u.id)} className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="删除用户">
                                                             <Trash2 size={20} />
                                                         </button>
                                                     </td>
@@ -380,67 +420,75 @@ const AdminDashboard: React.FC = () => {
                                         </tbody>
                                     </table>
                                 </div>
-                                {users.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">No users found.</div>}
+                                {users.length === 0 && <div className="text-center py-20 text-slate-400 font-bold">未找到用户。</div>}
                             </div>
                         ) : (
-                            /* Professional Grid List */
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                {((activeTab as string) === 'notaries' ? notaries : (activeTab as string) === 'inspectors' ? inspectors : agents).map((entity) => (
-                                    <div key={entity.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="flex gap-5">
-                                                <div className="w-16 h-16 bg-blue-50 border border-blue-100 rounded-3xl flex items-center justify-center text-blue-600 shrink-0 transform group-hover:scale-110 transition-transform">
-                                                    {(activeTab as string) === 'notaries' ? <ShieldCheck size={28} /> : (activeTab as string) === 'inspectors' ? <Search size={28} /> : <UserCheck size={28} />}
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-black text-slate-900 tracking-tight mb-1">{entity.name}</h3>
-                                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{entity.firm || entity.agency}</p>
-                                                    <div className="flex items-center gap-1 mt-2">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star key={i} size={14} className={i < Math.floor(entity.rating) ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"} />
-                                                        ))}
-                                                        <span className="text-xs font-black text-slate-600 ml-1">{entity.rating}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button onClick={() => { setCurrentEntity(entity); setShowModal(true); }} className="p-3 bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 rounded-2xl transition-all">
-                                                    <Edit2 size={18} />
-                                                </button>
-                                                <button onClick={() => handleDelete(entity.id!)} className="p-3 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-600 rounded-2xl transition-all">
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                                            <div className="flex items-center gap-3 text-slate-600">
-                                                <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                                                    <Phone size={14} className="text-slate-400" />
-                                                </div>
-                                                <span className="text-sm font-bold">{entity.phone}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3 text-slate-600">
-                                                <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                                                    <Mail size={14} className="text-slate-400" />
-                                                </div>
-                                                <span className="text-sm font-bold truncate">{entity.email}</span>
-                                            </div>
-                                            <div className="flex items-start gap-3 text-slate-600 col-span-2">
-                                                <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
-                                                    <MapPin size={14} className="text-slate-400" />
-                                                </div>
-                                                <span className="text-sm font-bold leading-relaxed">{entity.address}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-8 pt-8 border-t border-slate-50 flex flex-wrap gap-2">
-                                            {entity.languages.map(lang => (
-                                                <span key={lang} className="px-3 py-1 bg-slate-50 text-[10px] font-black text-slate-500 rounded-full uppercase tracking-widest">{lang}</span>
+                            /* Professional Table List */
+                            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left min-w-[700px]">
+                                        <thead className="bg-slate-50 border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">姓名</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeTab === 'agents' ? '所属公司' : '律所/公司'}</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">电话</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">邮箱</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">语言</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">评分</th>
+                                                <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {((activeTab as string) === 'notaries' ? notaries : (activeTab as string) === 'inspectors' ? inspectors : agents).map((entity) => (
+                                                <tr key={entity.id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+                                                                {(activeTab as string) === 'notaries' ? <ShieldCheck size={18} /> : (activeTab as string) === 'inspectors' ? <Search size={18} /> : <UserCheck size={18} />}
+                                                            </div>
+                                                            <span className="font-black text-slate-900 text-sm">{entity.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-sm font-bold text-slate-500">{entity.firm || entity.agency || '—'}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-sm font-bold text-slate-600">{entity.phone}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className="text-sm font-bold text-slate-600 truncate max-w-[180px] block">{entity.email}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {entity.languages.map(lang => (
+                                                                <span key={lang} className="px-2.5 py-0.5 bg-blue-50 text-[10px] font-black text-blue-600 rounded-full uppercase tracking-widest">{lang}</span>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-1">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star key={i} size={12} className={i < Math.floor(entity.rating) ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"} />
+                                                            ))}
+                                                            <span className="text-xs font-black text-slate-600 ml-1">{entity.rating}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right">
+                                                        <div className="flex justify-end gap-1">
+                                                            <button onClick={() => { setCurrentEntity(entity); setShowModal(true); }} className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="编辑">
+                                                                <Edit2 size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(entity.id!)} className="p-2.5 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="删除">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             ))}
-                                        </div>
-                                    </div>
-                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {((activeTab as string) === 'notaries' ? notaries : (activeTab as string) === 'inspectors' ? inspectors : agents).length === 0 && <div className="text-center py-20 text-slate-400 font-bold">暂无数据。</div>}
                             </div>
                         )}
                     </motion.div>
@@ -455,24 +503,24 @@ const AdminDashboard: React.FC = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl bg-white rounded-[3rem] shadow-2xl z-[201] overflow-hidden">
                             <form onSubmit={handleSaveEntity} className="p-10">
                                 <h2 className="text-3xl font-black text-slate-900 mb-8 uppercase tracking-tight">
-                                    {currentEntity?.id ? 'Edit' : 'Add New'} {activeTab.slice(0, -1)}
+                                    {currentEntity?.id ? '编辑' : '添加新'} {activeTab === 'notaries' ? '公证员' : activeTab === 'inspectors' ? '房屋检查员' : '经纪人'}
                                 </h2>
 
                                 <div className="space-y-5">
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Full Name</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">全名</label>
                                         <input
                                             type="text"
                                             required
                                             value={currentEntity?.name}
                                             onChange={e => setCurrentEntity(prev => prev ? { ...prev, name: e.target.value } : null)}
                                             className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
-                                            placeholder="Enter name..."
+                                            placeholder="输入姓名..."
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-5">
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">{activeTab === 'agents' ? 'Agency' : 'Firm'}</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">{activeTab === 'agents' ? '所属公司' : '律所/公司'}</label>
                                             <input
                                                 type="text"
                                                 value={activeTab === 'agents' ? currentEntity?.agency : currentEntity?.firm}
@@ -481,7 +529,7 @@ const AdminDashboard: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Rating (1-5)</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">评分 (1-5)</label>
                                             <input
                                                 type="number"
                                                 step="0.1"
@@ -494,7 +542,7 @@ const AdminDashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Email Address</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">电子邮箱</label>
                                         <input
                                             type="email"
                                             required
@@ -505,7 +553,7 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-2 gap-5">
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Phone</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">电话</label>
                                             <input
                                                 type="tel"
                                                 required
@@ -515,7 +563,7 @@ const AdminDashboard: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">Address</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">地址</label>
                                             <input
                                                 type="text"
                                                 required
@@ -523,6 +571,42 @@ const AdminDashboard: React.FC = () => {
                                                 onChange={e => setCurrentEntity(prev => prev ? { ...prev, address: e.target.value } : null)}
                                                 className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-blue-600 outline-none transition-all font-bold text-slate-700"
                                             />
+                                        </div>
+                                    </div>
+
+                                    {/* Multi-select Languages */}
+                                    <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 block flex items-center gap-2">
+                                            <Globe size={12} /> 语言能力
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['EN', 'FR', 'ZH', 'ES', 'AR', 'PT'].map(lang => {
+                                                const selected = currentEntity?.languages?.includes(lang);
+                                                const langLabels: Record<string, string> = { EN: '英语', FR: '法语', ZH: '中文', ES: '西班牙语', AR: '阿拉伯语', PT: '葡萄牙语' };
+                                                return (
+                                                    <button
+                                                        key={lang}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setCurrentEntity(prev => {
+                                                                if (!prev) return null;
+                                                                const langs = prev.languages || [];
+                                                                return {
+                                                                    ...prev,
+                                                                    languages: selected ? langs.filter(l => l !== lang) : [...langs, lang]
+                                                                };
+                                                            });
+                                                        }}
+                                                        className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
+                                                            selected
+                                                                ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20'
+                                                                : 'bg-slate-50 text-slate-400 border-transparent hover:border-blue-200 hover:text-blue-600'
+                                                        }`}
+                                                    >
+                                                        {lang} · {langLabels[lang]}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 </div>
@@ -533,13 +617,13 @@ const AdminDashboard: React.FC = () => {
                                         onClick={() => setShowModal(false)}
                                         className="flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
                                     >
-                                        Cancel
+                                        取消
                                     </button>
                                     <button
                                         type="submit"
                                         className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20"
                                     >
-                                        Save Changes
+                                        保存更改
                                     </button>
                                 </div>
                             </form>
@@ -555,14 +639,14 @@ const AdminDashboard: React.FC = () => {
                         <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl z-[201] overflow-hidden">
                             <form onSubmit={handleSaveScore} className="p-10">
                                 <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tight">
-                                    Score Property
+                                    房源评分
                                 </h2>
                                 <p className="text-sm font-bold text-slate-500 mb-8">{currentPropertyForScore.title}</p>
 
                                 <div className="grid grid-cols-2 gap-x-8 gap-y-6">
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
-                                            Price Reasonableness (0-2 points)
+                                            价格合理度 (0-2 分)
                                         </label>
                                         <input
                                             type="number"
@@ -578,7 +662,7 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
-                                            Rental Performance (0-2 points)
+                                            报酬率 (0-2 分)
                                         </label>
                                         <input
                                             type="number"
@@ -594,7 +678,7 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
-                                            Seller Motivation (0-2 points)
+                                            卖家动机 (0-2 分)
                                         </label>
                                         <input
                                             type="number"
@@ -610,7 +694,7 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
-                                            Property Condition (0-2 points)
+                                            房屋状况 (0-2 分)
                                         </label>
                                         <input
                                             type="number"
@@ -626,7 +710,7 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div className="col-span-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 block">
-                                            Transaction Complexity (0-2 points)
+                                            交易复杂度 (0-2 分)
                                         </label>
                                         <input
                                             type="number"
@@ -644,7 +728,7 @@ const AdminDashboard: React.FC = () => {
 
                                 <div className="mt-8 p-6 bg-blue-50 rounded-2xl">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-black text-blue-600 uppercase tracking-widest">Overall Score</span>
+                                        <span className="text-sm font-black text-blue-600 uppercase tracking-widest">总评分</span>
                                         <span className="text-2xl font-black text-blue-600">
                                             {(scoreForm.priceReasonablenessScore + scoreForm.rentalPerformanceScore + scoreForm.sellerMotivationScore + scoreForm.propertyConditionScore + scoreForm.transactionComplexityScore).toFixed(1)} / 10
                                         </span>
@@ -657,16 +741,55 @@ const AdminDashboard: React.FC = () => {
                                         onClick={() => setShowScoreModal(false)}
                                         className="flex-1 py-5 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
                                     >
-                                        Cancel
+                                        取消
                                     </button>
                                     <button
                                         type="submit"
                                         className="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20"
                                     >
-                                        Save Score
+                                        保存评分
                                     </button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            <PropertyEditModal
+                isOpen={showPropertyEditModal}
+                onClose={() => setShowPropertyEditModal(false)}
+                onSave={handleSavePropertyEdit}
+                property={currentPropertyForEdit}
+            />
+
+            {/* Confirmation Modal */}
+            <AnimatePresence>
+                {showConfirmModal && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200]" onClick={() => setShowConfirmModal(false)} />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-white rounded-[3rem] shadow-2xl z-[201] overflow-hidden">
+                            <div className="p-8 text-center">
+                                <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-6 ${confirmAction?.type === 'approve' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                    {confirmAction?.type === 'approve' ? <CheckCircle size={32} /> : <XCircle size={32} />}
+                                </div>
+                                <h2 className="text-2xl font-black text-slate-900 mb-2">{confirmAction?.type === 'approve' ? '确定批准？' : '确定拒绝？'}</h2>
+                                <p className="text-sm font-bold text-slate-500 mb-8">此操作将会更新该房源的审核状态。</p>
+                                <div className="flex gap-4">
+                                    <button
+                                        onClick={() => setShowConfirmModal(false)}
+                                        className="flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                                    >
+                                        取消
+                                    </button>
+                                    <button
+                                        onClick={executeConfirmAction}
+                                        className={`flex-1 py-4 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${confirmAction?.type === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-500/20'}`}
+                                    >
+                                        确定
+                                    </button>
+                                </div>
+                            </div>
                         </motion.div>
                     </>
                 )}
