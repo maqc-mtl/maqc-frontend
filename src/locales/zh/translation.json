@@ -410,7 +410,9 @@
         "registration_failed": "注册失败，请重试。",
         "agree_terms_alert": "请阅读并同意服务条款和隐私政策",
         "terms_url": "/terms",
-        "privacy_url": "/privacy"
+        "privacy_url": "/privacy",
+        "success_title": "注册成功！",
+        "success_message": "正在为您转向登录页面..."
     },
     "login": {
         "title": "登录",

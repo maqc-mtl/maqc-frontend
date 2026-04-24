@@ -415,7 +415,9 @@
         "registration_failed": "Registration failed. Please try again.",
         "agree_terms_alert": "Please read and accept the terms of service and privacy policy",
         "terms_url": "https://maqc.space.z.ai/en/terms",
-        "privacy_url": "https://maqc.space.z.ai/en/privacy"
+        "privacy_url": "https://maqc.space.z.ai/en/privacy",
+        "success_title": "Registration Successful!",
+        "success_message": "Redirecting to login page..."
     },
     "login": {
         "title": "Welcome Back",

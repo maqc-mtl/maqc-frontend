@@ -69,9 +69,9 @@ const Register: React.FC = () => {
         } catch (error: any) {
             console.error('Registration failed', error);
             if (error.response?.data?.message === 'Email is already registered') {
-                setError(t('register.email_already_registered'));
+                setError('register.email_already_registered');
             } else {
-                setError(t('register.registration_failed'));
+                setError('register.registration_failed');
             }
         }
     };
@@ -84,8 +84,8 @@ const Register: React.FC = () => {
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle className="w-8 h-8 text-green-600" />
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
-                        <p className="text-gray-500">Redirecting you to membership plans...</p>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('register.success_title')}</h3>
+                        <p className="text-gray-500">{t('register.success_message')}</p>
                     </div>
                 )}
                 <div className="text-center">
@@ -94,7 +94,7 @@ const Register: React.FC = () => {
                 </div>
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert">
-                        {error}
+                        {t(error as any)}
                     </div>
                 )}
                 <form className="mt-8 space-y-5" onSubmit={handleSubmit}>

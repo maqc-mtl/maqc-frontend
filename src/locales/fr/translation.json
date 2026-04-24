@@ -411,10 +411,12 @@
         "registration_failed": "L'inscription a échoué. Veuillez réessayer.",
         "agree_terms_alert": "Veuillez lire et accepter les conditions d'utilisation et la politique de confidentialité",
         "terms_url": "/terms",
-        "privacy_url": "/privacy"
+        "privacy_url": "/privacy",
+        "success_title": "Inscription réussie !",
+        "success_message": "Redirection vers la page de connexion..."
     },
     "login": {
-        "title": "Bon Retour",
+        "title": "Se connecter",
         "email_label": "Adresse Email",
         "password_label": "Mot de passe",
         "sign_in": "Se Connecter",
