@@ -242,7 +242,10 @@ const CreateProperty: React.FC = () => {
                 type: formData.propertyType,
                 businessType: formData.businessType || null,
                 listingType: formData.transactionType === 'sale' ? 'FOR_SALE' : 'FOR_RENT',
-                email: formData.email
+                email: formData.email,
+                contactName: formData.contactName,
+                contactPhone: formData.phone,
+                showContactInfo: formData.showContactInfo
             };
 
             formDataToSubmit.append('property', JSON.stringify(propertyData));

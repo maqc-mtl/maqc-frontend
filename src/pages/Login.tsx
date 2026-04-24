@@ -54,8 +54,7 @@ const Login: React.FC = () => {
     };
 
     const handleForgotPassword = () => {
-        //phrase3
-        // navigate('/forgot-password');
+        navigate('/forgot-password');
     };
 
     return (

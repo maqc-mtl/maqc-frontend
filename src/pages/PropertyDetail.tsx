@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import api, { propertyApi } from '../services/api';
 import { ToolsModals } from '../components/ToolsModals';
+import toast from 'react-hot-toast';
 
 interface Property {
     id: number;
@@ -55,11 +56,15 @@ interface Property {
         photoUrl?: string;
         agency?: string;
     };
+    contactName?: string;
+    contactPhone?: string;
+    email?: string;
+    showContactInfo?: boolean;
 }
 
 const PropertyDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { isAuthenticated, user } = useAuth();
     const [property, setProperty] = useState<Property | null>(null);
     const [loading, setLoading] = useState(true);
@@ -179,11 +184,11 @@ const PropertyDetail: React.FC = () => {
         incrementView();
     }, [property?.id]);
 
-    const formattedPrice = property ? new Intl.NumberFormat('fr-CA', {
+    const formattedPrice = new Intl.NumberFormat(i18n.language === 'zh' ? 'zh-CN' : 'en-CA', {
         style: 'currency',
         currency: 'CAD',
-        maximumFractionDigits: 0,
-    }).format(property.price).replace('$', '').trim() + ' $' : '';
+        maximumFractionDigits: 0
+    }).format(property?.price || 0);
 
     const listingTypeLabel = property?.listingType === 'FOR_SALE'
         ? t('detail.for_sale')
@@ -218,7 +223,7 @@ const PropertyDetail: React.FC = () => {
                 message: contactForm.message
             });
 
-            alert(t('detail.message_sent'));
+            toast.success(t('detail.message_sent'));
             setShowContactModal(false);
             // Reset form
             setContactForm({
@@ -231,7 +236,9 @@ const PropertyDetail: React.FC = () => {
             });
         } catch (error: any) {
             console.error('Failed to send message:', error);
-            setSubmitError(error.response?.data?.message || 'Failed to send message. Please try again.');
+            const errMsg = error.response?.data?.message || 'Failed to send message. Please try again.';
+            setSubmitError(errMsg);
+            toast.error(errMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -266,15 +273,8 @@ const PropertyDetail: React.FC = () => {
         ? property.imageUrls
         : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200'];
 
-    // Generate additional gallery images for visual richness
-    const galleryImages = images.length === 1
-        ? [
-            images[0],
-            images[0].replace('w=800', 'w=600') + '&sat=-50',
-            images[0].replace('w=800', 'w=600') + '&blur=1',
-            images[0].replace('w=800', 'w=600') + '&bri=10',
-        ]
-        : images;
+    // Use actual images for the gallery
+    const galleryImages = images;
 
     return (
         <div className="min-h-screen bg-white">
@@ -352,7 +352,7 @@ const PropertyDetail: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 rounded-2xl overflow-hidden mb-2">
                     {/* Main Image */}
                     <div
-                        className="lg:col-span-2 lg:row-span-2 relative cursor-pointer group"
+                        className={`relative cursor-pointer group ${galleryImages.length === 1 ? 'lg:col-span-3 lg:row-span-2' : 'lg:col-span-2 lg:row-span-2'}`}
                         onClick={() => { setSelectedImageIndex(0); setLightboxOpen(true); }}
                     >
                         <img
@@ -389,7 +389,7 @@ const PropertyDetail: React.FC = () => {
                         onClick={() => setLightboxOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 backdrop-blur-sm text-white rounded-lg text-xs font-bold hover:bg-slate-700 transition-all"
                     >
-                        <span>{galleryImages.length}</span>
+                        <span>{images.length}</span>
                         <Camera size={14} />
                     </button>
                 </div>
@@ -731,21 +731,30 @@ const PropertyDetail: React.FC = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-black text-slate-900 text-sm">
-                                            {property.user ? `${property.user.firstName} ${property.user.lastName}` : t('detail.owner')}
+                                            {property.contactName || (property.user ? `${property.user.firstName} ${property.user.lastName}` : t('detail.owner'))}
                                         </h3>
                                         <p className="text-xs text-slate-400 font-medium">{t('detail.owner_role')}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3 mb-4">
-                                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                                        <Phone size={14} className="text-blue-600" />
-                                        <span className="font-medium">{property.user?.phoneNumber || '+1 514-XXX-XXXX'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                                        <Mail size={14} className="text-blue-600" />
-                                        <span className="font-medium">{property.user?.email || 'contact@maqc.ca'}</span>
-                                    </div>
+                                    {property.showContactInfo !== false ? (
+                                        <>
+                                            <div className="flex items-center gap-3 text-sm text-slate-600">
+                                                <Phone size={14} className="text-blue-600" />
+                                                <span className="font-medium">{property.contactPhone || property.user?.phoneNumber || '+1 514-XXX-XXXX'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-sm text-slate-600">
+                                                <Mail size={14} className="text-blue-600" />
+                                                <span className="font-medium">{property.email || property.user?.email || 'contact@maqc.ca'}</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-100 flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <Lock size={12} />
+                                            {t('detail.contact_hidden', 'Contact info hidden')}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <button

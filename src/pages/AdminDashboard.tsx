@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Star, ShieldCheck, UserCheck, Award, Users, Globe } from 'lucide-react';
+import { LayoutDashboard, Home, Search, CheckCircle, XCircle, Trash2, Plus, Edit2, Star, ShieldCheck, UserCheck, Award, Users, Globe, MoreVertical } from 'lucide-react';
 // import { useTranslation } from 'react-i18next';
 import api, { propertyApi } from '../services/api';
 import PropertyEditModal from '../components/PropertyEditModal';
@@ -58,6 +58,7 @@ const AdminDashboard: React.FC = () => {
         propertyConditionScore: 0,
         transactionComplexityScore: 0
     });
+    const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
     useEffect(() => {
         setCurrentPage(0);
@@ -293,6 +294,7 @@ const AdminDashboard: React.FC = () => {
                                             <thead className="bg-slate-50 border-b border-slate-100">
                                                 <tr>
                                                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">房源</th>
+                                                    <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">用户邮箱</th>
                                                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">类型</th>
                                                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">状态</th>
                                                     <th className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">操作</th>
@@ -313,6 +315,12 @@ const AdminDashboard: React.FC = () => {
                                                             </div>
                                                         </td>
                                                         <td className="px-8 py-6">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-slate-700">{p.user?.email || '—'}</span>
+                                                                <span className="text-[10px] text-slate-400 font-medium">{p.user?.firstName} {p.user?.lastName}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-8 py-6">
                                                             <span className="px-3 py-1 bg-slate-100 text-[10px] font-black text-slate-500 rounded-full uppercase tracking-widest">{p.type}</span>
                                                         </td>
                                                         <td className="px-8 py-6">
@@ -327,23 +335,61 @@ const AdminDashboard: React.FC = () => {
                                                                 <option value="EXPIRED">已过期</option>
                                                             </select>
                                                         </td>
-                                                        <td className="px-4 md:px-8 py-4 md:py-6 text-right space-x-1 md:space-x-2">
-                                                            {p.status === 'PENDING' && (
-                                                                <>
-                                                                    <button onClick={() => handleApprove(p.id)} className="p-2 md:p-3 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="批准">
-                                                                        <CheckCircle size={18} />
-                                                                    </button>
-                                                                    <button onClick={() => handleRefuse(p.id)} className="p-2 md:p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="拒绝">
-                                                                        <XCircle size={18} />
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                            <button onClick={() => { setCurrentPropertyForEdit(p); setShowPropertyEditModal(true); }} className="p-2 md:p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="编辑">
-                                                                <Edit2 size={18} />
-                                                            </button>
-                                                            <button onClick={() => handleOpenScoreModal(p)} className="p-2 md:p-3 text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="房源评分">
-                                                                <Award size={18} />
-                                                            </button>
+                                                        <td className="px-4 md:px-8 py-4 md:py-6 text-right relative">
+                                                            <div className="flex justify-end">
+                                                                <button 
+                                                                    onClick={() => setActiveDropdown(activeDropdown === p.id ? null : p.id)}
+                                                                    className="p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-600"
+                                                                >
+                                                                    <MoreVertical size={20} />
+                                                                </button>
+
+                                                                <AnimatePresence>
+                                                                    {activeDropdown === p.id && (
+                                                                        <>
+                                                                            <div 
+                                                                                className="fixed inset-0 z-[100]" 
+                                                                                onClick={() => setActiveDropdown(null)}
+                                                                            />
+                                                                            <motion.div
+                                                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                                                className="absolute right-8 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[101] overflow-hidden"
+                                                                            >
+                                                                                {p.status === 'PENDING' && (
+                                                                                    <>
+                                                                                        <button 
+                                                                                            onClick={() => { handleApprove(p.id); setActiveDropdown(null); }}
+                                                                                            className="w-full flex items-center gap-3 px-4 py-3 text-emerald-600 hover:bg-emerald-50 transition-colors text-xs font-black uppercase tracking-widest"
+                                                                                        >
+                                                                                            <CheckCircle size={16} /> 批准房源
+                                                                                        </button>
+                                                                                        <button 
+                                                                                            onClick={() => { handleRefuse(p.id); setActiveDropdown(null); }}
+                                                                                            className="w-full flex items-center gap-3 px-4 py-3 text-rose-600 hover:bg-rose-50 transition-colors text-xs font-black uppercase tracking-widest border-b border-slate-50"
+                                                                                        >
+                                                                                            <XCircle size={16} /> 拒绝房源
+                                                                                        </button>
+                                                                                    </>
+                                                                                )}
+                                                                                <button 
+                                                                                    onClick={() => { setCurrentPropertyForEdit(p); setShowPropertyEditModal(true); setActiveDropdown(null); }}
+                                                                                    className="w-full flex items-center gap-3 px-4 py-3 text-blue-600 hover:bg-blue-50 transition-colors text-xs font-black uppercase tracking-widest"
+                                                                                >
+                                                                                    <Edit2 size={16} /> 编辑修改
+                                                                                </button>
+                                                                                <button 
+                                                                                    onClick={() => { handleOpenScoreModal(p); setActiveDropdown(null); }}
+                                                                                    className="w-full flex items-center gap-3 px-4 py-3 text-amber-600 hover:bg-amber-50 transition-colors text-xs font-black uppercase tracking-widest"
+                                                                                >
+                                                                                    <Award size={16} /> 房源评分
+                                                                                </button>
+                                                                            </motion.div>
+                                                                        </>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}

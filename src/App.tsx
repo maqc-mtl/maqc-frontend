@@ -27,6 +27,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Toaster } from 'react-hot-toast';
 
 const stripePromise = loadStripe('pk_test_51TOgiRLoPWXtoOPeOkFBeyDNaBmTbZvypTqCgdDh203EzgaMc4cY89b3GjuuDS5BTa8gmwpRRJh7kgwYwXEB6nLG00KthWA81n'); // Replace with your actual public key
 
@@ -457,6 +458,7 @@ function App() {
     const { t } = useTranslation();
     return (
         <Router>
+            <Toaster position="top-center" reverseOrder={false} />
             <ScrollToTop />
             <div className="min-h-screen flex flex-col selection:bg-blue-600 selection:text-white">
                 <Header />

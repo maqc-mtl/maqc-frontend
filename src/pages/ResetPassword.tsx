@@ -158,9 +158,9 @@ const ResetPassword: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                                placeholder="••••••••"
+                                placeholder="••••••"
                                 required
-                                minLength={8}
+                                minLength={6}
                             />
                             <button
                                 type="button"
@@ -186,9 +186,9 @@ const ResetPassword: React.FC = () => {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-3 pr-10 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
-                                placeholder="••••••••"
+                                placeholder="••••••"
                                 required
-                                minLength={8}
+                                minLength={6}
                             />
                             <button
                                 type="button"

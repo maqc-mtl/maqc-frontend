@@ -33,7 +33,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = (id: number, email: string, phoneNumber: string, role: string, firstName: string, lastName: string, planType: string) => {
         const userData = { id, email, phoneNumber, role, firstName, lastName, planType };
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        if (role !== 'ADMIN') {
+            localStorage.setItem('user', JSON.stringify(userData));
+        }
     };
 
     const logout = () => {
@@ -45,7 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (user) {
             const updatedUser = { ...user, planType };
             setUser(updatedUser);
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            if (user.role !== 'ADMIN') {
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+            }
         }
     };
 

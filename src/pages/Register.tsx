@@ -4,6 +4,7 @@ import api from '../services/api';
 import { User, Mail, Phone, Lock, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const Register: React.FC = () => {
     const { t } = useTranslation();
@@ -50,11 +51,11 @@ const Register: React.FC = () => {
         setError(null);
 
         if (formData.password !== formData.confirmPassword) {
-            alert(t('register.password_mismatch'));
+            toast.error(t('register.password_mismatch'));
             return;
         }
         if (!formData.agreeTerms) {
-            alert(t('register.agree_terms_alert'));
+            toast.error(t('register.agree_terms_alert'));
             return;
         }
         try {

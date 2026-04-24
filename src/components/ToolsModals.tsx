@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CalendarClock, ShieldCheck, ChevronLeft, User, MapPin, Phone, Mail, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 import api from '../services/api';
 
@@ -527,7 +528,7 @@ export const ToolsModals: React.FC<ToolsModalsProps> = ({ activeModal, onClose, 
                 <button
                     onClick={() => {
                         // In a real app, this would trigger a file download
-                        alert('Downloading template... (Placeholder)');
+                        toast.success('Downloading template... (Placeholder)');
                         handleClose();
                     }}
                     className="w-full py-4 bg-[#1a1a6d] text-white rounded-xl font-black text-sm uppercase tracking-wider hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/20"
