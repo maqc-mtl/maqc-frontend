@@ -303,8 +303,7 @@ const Header: React.FC = () => {
                         {isAuthenticated && !isAdminPage && (
                             <button
                                 onClick={() => {
-                                    if (user?.planType === 'FREE') navigate('/membership');
-                                    else navigate('/create-property');
+                                    navigate('/create-property');
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a56db] text-white rounded-lg text-xs font-bold transition-colors hover:bg-blue-700"
                             >
