@@ -165,7 +165,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                             {t('properties.published')}: {new Date(property.publishDate).toLocaleDateString()}
                         </div>
                     )}
-                    {property.listingType === 'FOR_SALE' && property.capRate && (
+                    {property.listingType === 'FOR_SALE' && property.capRate != null && (
                         <div className="text-xs font-bold text-green-600">
                             {t('detail.cap_rate')}: {property.capRate.toFixed(2)}%
                         </div>

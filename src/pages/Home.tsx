@@ -24,7 +24,7 @@ const Home: React.FC = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalProperty, setTotalProperty] = useState(0);
-    const [sortCriteria, setSortCriteria] = useState<Array<{ field: string, direction: 'asc' | 'desc' }>>([]);
+    const [sortCriteria, setSortCriteria] = useState<Array<{ field: string, direction: 'asc' | 'desc' }>>([{ field: 'publishDate', direction: 'desc' }]);
     const [isSortOpen, setIsSortOpen] = useState(false);
     const observer = useRef<IntersectionObserver | null>(null);
 
