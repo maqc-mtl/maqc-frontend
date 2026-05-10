@@ -182,9 +182,9 @@ const Membership: React.FC = () => {
                                     </tr>
                                     <tr>
                                         <td className="px-6 py-4 text-gray-600">{t('membership.feature_images')}</td>
-                                        <td className="px-6 py-4 text-center text-gray-900">5</td>
-                                        <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">10</td>
-                                        <td className="px-6 py-4 text-center text-gray-900">{t('common.unlimited', 'Unlimited')}</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">10</td>
+                                        <td className="px-6 py-4 text-center text-gray-900 bg-blue-50/50">15</td>
+                                        <td className="px-6 py-4 text-center text-gray-900">20</td>
                                     </tr>
                                     <tr>
                                         <td className="px-6 py-4 text-gray-600">{t('membership.feature_duration')}</td>
