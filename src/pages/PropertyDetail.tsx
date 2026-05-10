@@ -271,7 +271,7 @@ const PropertyDetail: React.FC = () => {
 
     const images = property.imageUrls && property.imageUrls.length > 0
         ? property.imageUrls
-        : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200'];
+        : [];
 
     // Use actual images for the gallery
     const galleryImages = images;
