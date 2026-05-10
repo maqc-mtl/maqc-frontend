@@ -105,23 +105,23 @@ const PropertyDetail: React.FC = () => {
     const [inspectorSuccess, setInspectorSuccess] = useState(false);
     const [selectedInspector, setSelectedInspector] = useState<{ id: number; name: string; firm: string; address: string; phone: string; email: string; languages: string[]; rating: number } | null>(null);
 
-    // Notary list data
-    const notaries = [
-        { id: 1, name: 'Me Sophie Tremblay', firm: 'Tremblay & Associés Notaires', address: '1200 Rue Sherbrooke O, Montréal, QC', phone: '+1 514-555-0101', email: 'sophie@tremblaynotaires.ca', languages: ['FR', 'EN'], rating: 4.9 },
-        { id: 2, name: 'Me Jean-Philippe Lavoie', firm: 'Lavoie Notaires Inc.', address: '3450 Rue Stanley, Montréal, QC', phone: '+1 514-555-0202', email: 'jp@lavoienotaires.ca', languages: ['FR', 'EN', 'ES'], rating: 4.8 },
-        { id: 3, name: 'Me Catherine Wang', firm: 'Cabinet Notarial Wang', address: '888 Boul. René-Lévesque, Québec, QC', phone: '+1 418-555-0303', email: 'catherine@wangnotaire.ca', languages: ['FR', 'EN', 'ZH'], rating: 4.7 },
-        { id: 4, name: 'Me André Bergeron', firm: 'Bergeron, Roy & Notaires', address: '550 Rue King O, Sherbrooke, QC', phone: '+1 819-555-0404', email: 'andre@bergeronroy.ca', languages: ['FR'], rating: 4.9 },
-        { id: 5, name: 'Me Isabelle Martin', firm: 'Martin Notaires SENCRL', address: '2100 Boul. de Maisonneuve, Montréal, QC', phone: '+1 514-555-0505', email: 'isabelle@martinnotaires.ca', languages: ['FR', 'EN'], rating: 4.6 },
-    ];
+    // Notary list state
+    const [notaries, setNotaries] = useState<any[]>([]);
+    const [inspectors, setInspectors] = useState<any[]>([]);
 
-    // Home Inspector list data
-    const inspectors = [
-        { id: 1, name: 'Marc-André Lefebvre', firm: 'Inspection Pro MTL', address: '4560 Rue Beaubien E, Montréal, QC', phone: '+1 514-555-8801', email: 'marc@inspectionpromtl.ca', languages: ['FR', 'EN'], rating: 4.9 },
-        { id: 2, name: 'Sarah Miller', firm: 'Miller Home Inspections', address: '2200 Chemin d\'Aylmer, Gatineau, QC', phone: '+1 819-555-8802', email: 'sarah@millerhome.ca', languages: ['EN', 'FR'], rating: 4.7 },
-        { id: 3, name: 'Lu Wei Ying', firm: 'SafeHome Inspections', address: '777 Rue Saint-Jacques, Montréal, QC', phone: '+1 514-555-8803', email: 'lu@safehome.ca', languages: ['ZH', 'EN'], rating: 4.8 },
-        { id: 4, name: 'Jacques Villeneuve', firm: 'Villeneuve Inspections Inc.', address: '123 Boul. Laurier, Québec, QC', phone: '+1 418-555-8804', email: 'jacques@inspectionsquebec.ca', languages: ['FR'], rating: 4.9 },
-        { id: 5, name: 'Emily Clark', firm: 'Clark Heritage Inspections', address: '550 Rue Sherbrooke O, Montréal, QC', phone: '+1 514-555-8805', email: 'emily@clarkheritage.ca', languages: ['EN'], rating: 4.6 },
-    ];
+    // Fetch notaries when notary modal opens
+    useEffect(() => {
+        if (showNotaryModal && notaries.length === 0) {
+            api.get('/admin/notaries').then(res => setNotaries(res.data)).catch(console.error);
+        }
+    }, [showNotaryModal]);
+
+    // Fetch inspectors when inspector modal opens
+    useEffect(() => {
+        if (showInspectorModal && inspectors.length === 0) {
+            api.get('/admin/inspectors').then(res => setInspectors(res.data)).catch(console.error);
+        }
+    }, [showInspectorModal]);
 
 
     // Contact form state
@@ -447,12 +447,12 @@ const PropertyDetail: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6">
+                                        {/* <div className="bg-slate-50 rounded-2xl border border-slate-100 p-6">
                                             <h3 className="text-sm font-black text-slate-900 mb-4">{t('detail.commercial_description')}</h3>
                                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                                                 {property.description}
                                             </p>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 ) : (
                                     // Residential Property - Show full details
@@ -777,14 +777,14 @@ const PropertyDetail: React.FC = () => {
                                         <span className="text-slate-400 font-medium">{t('detail.type_label')}</span>
                                         <span className="font-bold text-slate-700">{t(`home.type_${property.type.toLowerCase()}`)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
+                                    {/* <div className="flex justify-between text-sm">
                                         <span className="text-slate-400 font-medium">{t('detail.bedrooms')}</span>
                                         <span className="font-bold text-slate-700">{property.bedrooms}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-400 font-medium">{t('detail.bathrooms')}</span>
+                                        <span className="tex tht-slate-400 font-medium">{t('detail.bathrooms')}</span>
                                         <span className="font-bold text-slate-700">{property.bathrooms}</span>
-                                    </div>
+                                    </div> */}
                                     <div className="flex justify-between text-sm">
                                         <span className="text-slate-400 font-medium">ID</span>
                                         <span className="font-bold text-slate-700">#{property.id}</span>
@@ -851,34 +851,40 @@ const PropertyDetail: React.FC = () => {
 
                                 {/* Name Row */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <input
-                                        type="text"
-                                        placeholder={t('detail.first_name')}
-                                        value={contactForm.firstName}
-                                        onChange={(e) => setContactForm(prev => ({ ...prev, firstName: e.target.value }))}
-                                        className="px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-                                        required
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder={t('detail.last_name')}
-                                        value={contactForm.lastName}
-                                        onChange={(e) => setContactForm(prev => ({ ...prev, lastName: e.target.value }))}
-                                        className="px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-                                        required
-                                    />
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder={`${t('detail.first_name')} *`}
+                                            value={contactForm.firstName}
+                                            onChange={(e) => setContactForm(prev => ({ ...prev, firstName: e.target.value }))}
+                                            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <input
+                                            type="text"
+                                            placeholder={`${t('detail.last_name')} *`}
+                                            value={contactForm.lastName}
+                                            onChange={(e) => setContactForm(prev => ({ ...prev, lastName: e.target.value }))}
+                                            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                                            required
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Contact Row */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <input
-                                        type="email"
-                                        placeholder={t('detail.email_placeholder')}
-                                        value={contactForm.email}
-                                        onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                                        className="px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
-                                        required
-                                    />
+                                    <div>
+                                        <input
+                                            type="email"
+                                            placeholder={`${t('detail.email_placeholder')} *`}
+                                            value={contactForm.email}
+                                            onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
+                                            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                                            required
+                                        />
+                                    </div>
                                     <input
                                         type="tel"
                                         placeholder={t('detail.phone_placeholder')}
@@ -1303,7 +1309,7 @@ const PropertyDetail: React.FC = () => {
                                                             <p className="text-[10px] text-slate-400 truncate">{notary.email}</p>
                                                         </div>
                                                         <div className="flex items-center gap-1.5 mt-2">
-                                                            {notary.languages.map((lang) => (
+                                                            {notary.languages.map((lang: string) => (
                                                                 <span key={lang} className="px-1.5 py-0.5 bg-slate-100 text-[9px] font-bold text-slate-500 rounded uppercase">{lang}</span>
                                                             ))}
                                                         </div>
@@ -1332,7 +1338,7 @@ const PropertyDetail: React.FC = () => {
                                             {/* Date & Time */}
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_date')}</label>
+                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_date')} <span className="text-red-500">*</span></label>
                                                     <input
                                                         type="date"
                                                         required
@@ -1342,7 +1348,7 @@ const PropertyDetail: React.FC = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_time')}</label>
+                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_time')} <span className="text-red-500">*</span></label>
                                                     <input
                                                         type="time"
                                                         required
@@ -1355,7 +1361,7 @@ const PropertyDetail: React.FC = () => {
 
                                             {/* Name */}
                                             <div>
-                                                <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_your_name')}</label>
+                                                <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_your_name')} <span className="text-red-500">*</span></label>
                                                 <input
                                                     type="text"
                                                     required
@@ -1378,7 +1384,7 @@ const PropertyDetail: React.FC = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_email')}</label>
+                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_email')} <span className="text-red-500">*</span></label>
                                                     <input
                                                         type="email"
                                                         required
@@ -1516,7 +1522,7 @@ const PropertyDetail: React.FC = () => {
                                                             <p className="text-[10px] text-slate-400 truncate">{inspector.email}</p>
                                                         </div>
                                                         <div className="flex items-center gap-1.5 mt-2">
-                                                            {inspector.languages.map((lang) => (
+                                                            {inspector.languages.map((lang: string) => (
                                                                 <span key={lang} className="px-1.5 py-0.5 bg-slate-100 text-[9px] font-bold text-slate-500 rounded uppercase">{lang}</span>
                                                             ))}
                                                         </div>
@@ -1545,7 +1551,7 @@ const PropertyDetail: React.FC = () => {
                                             {/* Date & Time */}
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_date')}</label>
+                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_date')} <span className="text-red-500">*</span></label>
                                                     <input
                                                         type="date"
                                                         required
@@ -1555,7 +1561,7 @@ const PropertyDetail: React.FC = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_time')}</label>
+                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_time')} <span className="text-red-500">*</span></label>
                                                     <input
                                                         type="time"
                                                         required
@@ -1568,7 +1574,7 @@ const PropertyDetail: React.FC = () => {
 
                                             {/* Name */}
                                             <div>
-                                                <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_name')}</label>
+                                                <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_name')} <span className="text-red-500">*</span></label>
                                                 <input
                                                     type="text"
                                                     required
@@ -1591,7 +1597,7 @@ const PropertyDetail: React.FC = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_email')}</label>
+                                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.inspector_email')} <span className="text-red-500">*</span></label>
                                                     <input
                                                         type="email"
                                                         required

@@ -117,7 +117,13 @@ const AdminDashboard: React.FC = () => {
 
     const handleStatusChange = async (propertyId: number, newStatus: string) => {
         try {
-            await api.put(`/admin/properties/${propertyId}/status`, null, { params: { status: newStatus } });
+            if (newStatus === 'APPROVED') {
+                // Use approve endpoint to set publishDate and expirationDate
+                await api.post(`/admin/properties/${propertyId}/approve`);
+            } else {
+                // Use status endpoint for other status changes
+                await api.put(`/admin/properties/${propertyId}/status`, null, { params: { status: newStatus } });
+            }
             fetchData();
         } catch (err) { console.error(err); }
     };
@@ -337,7 +343,7 @@ const AdminDashboard: React.FC = () => {
                                                         </td>
                                                         <td className="px-4 md:px-8 py-4 md:py-6 text-right relative">
                                                             <div className="flex justify-end">
-                                                                <button 
+                                                                <button
                                                                     onClick={() => setActiveDropdown(activeDropdown === p.id ? null : p.id)}
                                                                     className="p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-600"
                                                                 >
@@ -347,8 +353,8 @@ const AdminDashboard: React.FC = () => {
                                                                 <AnimatePresence>
                                                                     {activeDropdown === p.id && (
                                                                         <>
-                                                                            <div 
-                                                                                className="fixed inset-0 z-[100]" 
+                                                                            <div
+                                                                                className="fixed inset-0 z-[100]"
                                                                                 onClick={() => setActiveDropdown(null)}
                                                                             />
                                                                             <motion.div
@@ -359,13 +365,13 @@ const AdminDashboard: React.FC = () => {
                                                                             >
                                                                                 {p.status === 'PENDING' && (
                                                                                     <>
-                                                                                        <button 
+                                                                                        <button
                                                                                             onClick={() => { handleApprove(p.id); setActiveDropdown(null); }}
                                                                                             className="w-full flex items-center gap-3 px-4 py-3 text-emerald-600 hover:bg-emerald-50 transition-colors text-xs font-black uppercase tracking-widest"
                                                                                         >
                                                                                             <CheckCircle size={16} /> 批准房源
                                                                                         </button>
-                                                                                        <button 
+                                                                                        <button
                                                                                             onClick={() => { handleRefuse(p.id); setActiveDropdown(null); }}
                                                                                             className="w-full flex items-center gap-3 px-4 py-3 text-rose-600 hover:bg-rose-50 transition-colors text-xs font-black uppercase tracking-widest border-b border-slate-50"
                                                                                         >
@@ -373,13 +379,13 @@ const AdminDashboard: React.FC = () => {
                                                                                         </button>
                                                                                     </>
                                                                                 )}
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={() => { setCurrentPropertyForEdit(p); setShowPropertyEditModal(true); setActiveDropdown(null); }}
                                                                                     className="w-full flex items-center gap-3 px-4 py-3 text-blue-600 hover:bg-blue-50 transition-colors text-xs font-black uppercase tracking-widest"
                                                                                 >
                                                                                     <Edit2 size={16} /> 编辑修改
                                                                                 </button>
-                                                                                <button 
+                                                                                <button
                                                                                     onClick={() => { handleOpenScoreModal(p); setActiveDropdown(null); }}
                                                                                     className="w-full flex items-center gap-3 px-4 py-3 text-amber-600 hover:bg-amber-50 transition-colors text-xs font-black uppercase tracking-widest"
                                                                                 >
@@ -643,11 +649,10 @@ const AdminDashboard: React.FC = () => {
                                                                 };
                                                             });
                                                         }}
-                                                        className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2 ${
-                                                            selected
+                                                        className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2 ${selected
                                                                 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20'
                                                                 : 'bg-slate-50 text-slate-400 border-transparent hover:border-blue-200 hover:text-blue-600'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         {lang} · {langLabels[lang]}
                                                     </button>

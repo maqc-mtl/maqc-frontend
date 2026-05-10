@@ -82,16 +82,18 @@ const Header: React.FC = () => {
                 className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60"
             >
                 <div className="max-w-[1600px] mx-auto px-4 md:px-10 h-16 md:h-24 flex justify-between items-center">
-                    {/* Logo */}
-                    <Link to={isAdminPage ? "/admin" : "/"} className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 flex items-center gap-2 md:gap-3 group">
-                        <div className="w-9 h-9 md:w-12 md:h-12 bg-slate-900 rounded-xl md:rounded-2xl flex items-center justify-center transform group-hover:rotate-12 group-hover:bg-blue-600 transition-all duration-500 shadow-xl shadow-slate-900/10">
-                            <img src={logo} alt="MAQC" className="w-15 h-15 object-contain" />
-                        </div>
-                        <span className="tracking-[-0.05em] uppercase">MAQC</span>
-                    </Link>
+                    {/* Logo - hidden on admin page */}
+                    {!isAdminPage && (
+                        <Link to="/" className="text-xs md:text-sm font-black tracking-tighter text-slate-900 flex items-center gap-2 md:gap-3 group">
+                            <div className="w-30 h-30 md:w-24 md:h-24 rounded-full flex items-center justify-center transform group-hover:rotate-12 transition-all duration-500 overflow-hidden">
+                                <img src={logo} alt={t('nav.site_title')} className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-full filter" />
+                            </div>
+                            <span className="tracking-[-0.05em] uppercase hidden md:block">{t('nav.site_title')}</span>
+                        </Link>
+                    )}
 
                     {/* Desktop Nav */}
-                    <div className="hidden md:flex items-center gap-6">
+                    <div className={`hidden md:flex items-center ${isAdminPage ? 'ml-auto' : 'gap-6'}`}>
                         {/* Tools Dropdown */}
                         {!isAdminPage && isAuthenticated && hasPaidPlan && (
                             <div className="relative">
@@ -202,7 +204,7 @@ const Header: React.FC = () => {
                         )}
 
                         {isAuthenticated ? (
-                            <div className="flex items-center gap-6">
+                            <div className={`flex items-center ${isAdminPage ? '' : 'gap-6'}`}>
                                 {!isAdminPage && (
                                     <button
                                         onClick={() => {
@@ -550,7 +552,7 @@ function App() {
                                 </li>
                                 <li className="flex items-center gap-3">
                                     <Phone size={16} className="md:hidden" /> <Phone size={20} className="hidden md:block text-[#00a651]" />
-                                    <span>+1-514-XXX-XXXX</span>
+                                    <span>+1-514-748-8663</span>
                                 </li>
                                 <li className="flex items-start gap-3">
                                     <MapPin size={16} className="md:hidden text-red-500 shrink-0" /> <MapPin size={20} className="hidden md:block text-red-500 shrink-0" />
@@ -572,3 +574,4 @@ function App() {
 };
 
 export default App;
+

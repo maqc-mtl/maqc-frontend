@@ -58,8 +58,8 @@ const CreateProperty: React.FC = () => {
     const [upgradeReason, setUpgradeReason] = useState<'listings' | 'images' | null>(null);
     const [sizeWarning, setSizeWarning] = useState<string | null>(null);
 
-    const MAX_TOTAL_SIZE_MB = 10;
-    const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024;
+    const MAX_FILE_SIZE_KB = 500;
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_KB * 1024;
 
 
     useEffect(() => {
@@ -125,10 +125,10 @@ const CreateProperty: React.FC = () => {
     }
 
     const planLimits: Record<string, PlanLimit> = {
-        FREE: { maxRental: 2, maxSale: 1, maxImages: 2 },
-        BASIC: { maxRental: 3, maxSale: 2, maxImages: 5 },
-        PLUS: { maxRental: 6, maxSale: 4, maxImages: 10 },
-        PRO: { maxRental: 12, maxSale: 10, maxImages: 10 }
+        FREE: { maxRental: 2, maxSale: 1, maxImages: 5 },
+        BASIC: { maxRental: 3, maxSale: 2, maxImages: 10 },
+        PLUS: { maxRental: 6, maxSale: 4, maxImages: 15 },
+        PRO: { maxRental: 12, maxSale: 10, maxImages: 20 }
     };
 
     const getCurrentPlanLimits = (): PlanLimit | null => {
@@ -169,18 +169,12 @@ const CreateProperty: React.FC = () => {
                 return;
             }
 
-            // Check total file size limit (10MB)
-            const currentSize = getTotalFileSize(selectedImages);
-            const newSize = getTotalFileSize(files);
-            const totalSize = currentSize + newSize;
-
-            if (totalSize > MAX_TOTAL_SIZE_BYTES) {
-                const currentMB = (currentSize / (1024 * 1024)).toFixed(1);
-                const newMB = (newSize / (1024 * 1024)).toFixed(1);
+            // Check per-file size limit (500KB)
+            const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE_BYTES);
+            if (oversizedFiles.length > 0) {
+                const oversizedNames = oversizedFiles.map(f => f.name).join(', ');
                 setSizeWarning(
-                    t('create_property.size_exceeded',
-                        `Total image size exceeds ${MAX_TOTAL_SIZE_MB}MB limit. Current: ${currentMB}MB + New: ${newMB}MB = ${(totalSize / (1024 * 1024)).toFixed(1)}MB`
-                    )
+                    t('create_property.size_exceeded', { files: oversizedNames, defaultValue: `Each file must be under ${MAX_FILE_SIZE_KB}KB. Oversized files: ${oversizedNames}` })
                 );
                 // Auto-dismiss after 5 seconds
                 setTimeout(() => setSizeWarning(null), 5000);
@@ -386,7 +380,9 @@ const CreateProperty: React.FC = () => {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.ad_title')}</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    {t('create_property.ad_title')} <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="text"
                                     name="title"
@@ -400,7 +396,9 @@ const CreateProperty: React.FC = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.property_type')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        {t('create_property.property_type')} <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         name="propertyType"
                                         value={formData.propertyType}
@@ -436,12 +434,15 @@ const CreateProperty: React.FC = () => {
                                     </div>
                                 )}
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.transaction_type')}</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        {t('create_property.transaction_type')} <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         name="transactionType"
                                         value={formData.transactionType}
                                         onChange={handleChange}
                                         className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                                        required
                                     >
                                         <option value="">{t('create_property.select_type')}</option>
                                         <option value="sale">{t('create_property.for_sale')}</option>
@@ -473,7 +474,9 @@ const CreateProperty: React.FC = () => {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.address')}</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    {t('create_property.address')} <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="text"
                                     name="address"
@@ -486,12 +489,15 @@ const CreateProperty: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.region', 'Region')}</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    {t('create_property.region', 'Region')} <span className="text-red-500">*</span>
+                                </label>
                                 <select
                                     name="area"
                                     value={formData.area}
                                     onChange={handleChange}
                                     className="w-full md:w-1/3 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+                                    required
                                 >
                                     <option value="">{t('home.all_areas', 'All Areas')}</option>
                                     <option value="Montreal Region">{t('home.area_montreal', 'Montreal')}</option>
@@ -511,7 +517,9 @@ const CreateProperty: React.FC = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.price')}</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                    {t('create_property.price')} <span className="text-red-500">*</span>
+                                </label>
                                 <input
                                     type="number"
                                     name="price"
@@ -531,129 +539,133 @@ const CreateProperty: React.FC = () => {
                                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.units')}</label>
-                                <input
-                                    type="number"
-                                    name="units"
-                                    value={formData.units}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.bedrooms')}</label>
-                                    <input
-                                        type="number"
-                                        name="bedrooms"
-                                        value={formData.bedrooms}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.bathrooms')}</label>
-                                    <input
-                                        type="number"
-                                        name="bathrooms"
-                                        value={formData.bathrooms}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.year_built')}</label>
-                                    <input
-                                        type="number"
-                                        name="yearBuilt"
-                                        value={formData.yearBuilt}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.move_in_date')}</label>
-                                    <input
-                                        type="date"
-                                        name="moveInDate"
-                                        value={formData.moveInDate}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
+                            {formData.propertyType !== 'COMMERCIAL' && (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.units')}</label>
+                                        <input
+                                            type="number"
+                                            name="units"
+                                            value={formData.units}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.bedrooms')}</label>
+                                            <input
+                                                type="number"
+                                                name="bedrooms"
+                                                value={formData.bedrooms}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.bathrooms')}</label>
+                                            <input
+                                                type="number"
+                                                name="bathrooms"
+                                                value={formData.bathrooms}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.year_built')}</label>
+                                            <input
+                                                type="number"
+                                                name="yearBuilt"
+                                                value={formData.yearBuilt}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.move_in_date')}</label>
+                                            <input
+                                                type="date"
+                                                name="moveInDate"
+                                                value={formData.moveInDate}
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
 
-                            <div className="flex flex-wrap gap-6 pt-2">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="hasTerrace"
-                                        checked={formData.hasTerrace}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm text-slate-700 font-medium">{t('create_property.has_terrace')}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="hasPool"
-                                        checked={formData.hasPool}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm text-slate-700 font-medium">{t('create_property.has_pool')}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="hasYard"
-                                        checked={formData.hasYard}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm text-slate-700 font-medium">{t('create_property.has_yard')}</span>
-                                </label>
+                                    <div className="flex flex-wrap gap-6 pt-2">
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                name="hasTerrace"
+                                                checked={formData.hasTerrace}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-slate-700 font-medium">{t('create_property.has_terrace')}</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                name="hasPool"
+                                                checked={formData.hasPool}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-slate-700 font-medium">{t('create_property.has_pool')}</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                name="hasYard"
+                                                checked={formData.hasYard}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-slate-700 font-medium">{t('create_property.has_yard')}</span>
+                                        </label>
 
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="hasStove"
-                                        checked={formData.hasStove}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm text-slate-700 font-medium">{t('create_property.has_stove')}</span>
-                                </label>
-                            </div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                name="hasStove"
+                                                checked={formData.hasStove}
+                                                onChange={handleChange}
+                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <span className="text-sm text-slate-700 font-medium">{t('create_property.has_stove')}</span>
+                                        </label>
+                                    </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.indoor_parking')}</label>
-                                    <input
-                                        type="number"
-                                        name="indoorParking"
-                                        value={formData.indoorParking}
-                                        onChange={handleChange}
-                                        min="0"
-                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.outdoor_parking')}</label>
-                                    <input
-                                        type="number"
-                                        name="outdoorParking"
-                                        value={formData.outdoorParking}
-                                        onChange={handleChange}
-                                        min="0"
-                                        className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.indoor_parking')}</label>
+                                            <input
+                                                type="number"
+                                                name="indoorParking"
+                                                value={formData.indoorParking}
+                                                onChange={handleChange}
+                                                min="0"
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('create_property.outdoor_parking')}</label>
+                                            <input
+                                                type="number"
+                                                name="outdoorParking"
+                                                value={formData.outdoorParking}
+                                                onChange={handleChange}
+                                                min="0"
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -702,28 +714,16 @@ const CreateProperty: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Size progress indicator */}
+                        {/* Image count indicator */}
                         {selectedImages.length > 0 && (
                             <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                                <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                                         {selectedImages.length} / {getImageLimit()} {t('create_property.selected', 'images')}
                                     </span>
-                                    <span className={`text-xs font-bold uppercase tracking-widest ${
-                                        getTotalFileSize(selectedImages) > MAX_TOTAL_SIZE_BYTES * 0.8 ? 'text-amber-600' : 'text-slate-500'
-                                    }`}>
-                                        {formatFileSize(getTotalFileSize(selectedImages))} / {MAX_TOTAL_SIZE_MB}MB
+                                    <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                                        {formatFileSize(getTotalFileSize(selectedImages))}
                                     </span>
-                                </div>
-                                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all duration-300 ${
-                                            getTotalFileSize(selectedImages) > MAX_TOTAL_SIZE_BYTES * 0.8
-                                                ? 'bg-amber-500'
-                                                : 'bg-blue-500'
-                                        }`}
-                                        style={{ width: `${Math.min(100, (getTotalFileSize(selectedImages) / MAX_TOTAL_SIZE_BYTES) * 100)}%` }}
-                                    />
                                 </div>
                             </div>
                         )}
@@ -735,7 +735,7 @@ const CreateProperty: React.FC = () => {
                             >
                                 <Upload size={32} className="mb-3 text-slate-400" />
                                 <span className="text-sm font-medium">{t('create_property.click_to_upload')}</span>
-                                <span className="text-xs text-slate-400 mt-1">{t('create_property.max_total_size', `Max total: ${MAX_TOTAL_SIZE_MB}MB`)}</span>
+                                <span className="text-xs text-slate-400 mt-1">{t('create_property.max_file_size', `Max per file: ${MAX_FILE_SIZE_KB}KB`)}</span>
                                 <input
                                     id="file-upload"
                                     type="file"

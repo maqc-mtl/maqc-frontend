@@ -11,8 +11,13 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { login } = useAuth();
+    const { login, logout } = useAuth();
     const navigate = useNavigate();
+
+    // Clear any existing auth state when landing on login page
+    React.useEffect(() => {
+        logout();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

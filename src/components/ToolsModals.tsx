@@ -210,11 +210,30 @@ export const ToolsModals: React.FC<ToolsModalsProps> = ({ activeModal, onClose, 
                                 </div>
                             </div>
 
-                            <form onSubmit={(e) => { e.preventDefault(); setSuccess(true); }} className="space-y-4">
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                try {
+                                    await api.post('/admin/reserve', {
+                                        proType: activeModal === 'buyerAgent' || activeModal === 'sellerAgent' ? 'agent' : activeModal,
+                                        proId: selectedPro.id,
+                                        clientName: formName,
+                                        clientEmail: formEmail,
+                                        clientPhone: formPhone,
+                                        date: formDate,
+                                        time: formTime,
+                                        notes: formNotes
+                                    });
+                                    setSuccess(true);
+                                    toast.success(t('detail.reservation_sent'));
+                                } catch (error) {
+                                    toast.error('Failed to send reservation email');
+                                    console.error('Reservation error:', error);
+                                }
+                            }} className="space-y-4">
                                 {/* Date & Time */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_date')}</label>
+                                        <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_date')} <span className="text-red-500">*</span></label>
                                         <input
                                             type="date"
                                             required
@@ -224,7 +243,7 @@ export const ToolsModals: React.FC<ToolsModalsProps> = ({ activeModal, onClose, 
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_time')}</label>
+                                        <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_time')} <span className="text-red-500">*</span></label>
                                         <input
                                             type="time"
                                             required
@@ -237,7 +256,7 @@ export const ToolsModals: React.FC<ToolsModalsProps> = ({ activeModal, onClose, 
 
                                 {/* Name */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_your_name')}</label>
+                                    <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_your_name')} <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         required
@@ -260,7 +279,7 @@ export const ToolsModals: React.FC<ToolsModalsProps> = ({ activeModal, onClose, 
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_email')}</label>
+                                        <label className="text-xs font-bold text-slate-500 mb-1 block">{t('detail.notary_email')} <span className="text-red-500">*</span></label>
                                         <input
                                             type="email"
                                             required
